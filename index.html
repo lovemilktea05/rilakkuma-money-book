@@ -469,6 +469,38 @@
     margin:0 0 16px;
   }
 
+  .year-view-dialog-body{
+    position:relative;
+  }
+
+  .year-view-dialog-body h2{
+    padding-right:46px;
+  }
+
+  .year-view-close{
+    position:absolute;
+    top:12px;
+    right:12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    padding:0;
+    border:1px solid #dfc7a8;
+    border-radius:50%;
+    background:#fffaf2;
+    color:#5b402c;
+    font-size:27px;
+    font-weight:700;
+    line-height:1;
+    cursor:pointer;
+  }
+
+  .year-view-close:active{
+    transform:translateY(1px);
+  }
+
   .field{
     margin-bottom:14px;
   }
@@ -1533,6 +1565,7 @@
 
   .inline-year-view-btn{
     flex:0 1 auto;
+    margin-left:auto;
     border:1px solid #dfc7a8;
     border-radius:12px;
     background:#fffaf2;
@@ -1959,7 +1992,7 @@
             <option value="11">11 月</option>
             <option value="12">12 月</option>
           </select>
-          <button class="inline-year-view-btn" id="inlineYearViewBtn" type="button">檢視整年度</button>
+          <button class="inline-year-view-btn" id="inlineYearViewBtn" type="button">檢視年度</button>
         </div>
 
         <button class="hidden-month-nav" id="prevMonth" aria-label="上個月" tabindex="-1">‹</button>
@@ -2200,13 +2233,11 @@
 
 
 <dialog id="yearViewDialog">
-  <div class="dialog-body">
+  <div class="dialog-body year-view-dialog-body">
+    <button class="year-view-close" type="button" id="closeYearView" aria-label="關閉年度檢視" title="關閉">×</button>
     <h2 id="yearViewTitle">📊 整年度</h2>
     <div id="yearViewSummary" class="import-summary"></div>
     <div id="yearViewList" class="preview-list"></div>
-    <div class="dialog-actions">
-      <button class="btn btn-primary" type="button" id="closeYearView">完成</button>
-    </div>
   </div>
 </dialog>
 
