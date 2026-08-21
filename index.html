@@ -1585,6 +1585,61 @@
     }
   }
 
+
+  /* ===== 快速月份切換：< 8月 > ===== */
+  .quick-month-switch{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    border:1px solid #dfc7a8;
+    border-radius:12px;
+    background:#fffaf2;
+    min-height:38px;
+    padding:2px 4px;
+  }
+
+  .month-arrow-btn{
+    border:0;
+    background:transparent;
+    color:#5b402c;
+    width:30px;
+    height:32px;
+    padding:0;
+    font-size:26px;
+    line-height:1;
+    font-weight:700;
+    display:grid;
+    place-items:center;
+  }
+
+  .quick-month-label{
+    min-width:42px;
+    text-align:center;
+    color:#5b402c;
+    font-size:15px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .month-arrow-btn:active{
+    transform:translateY(1px);
+  }
+
+  @media (max-width:390px){
+    .quick-month-switch{
+      gap:2px;
+    }
+    .month-arrow-btn{
+      width:27px;
+      height:30px;
+      font-size:24px;
+    }
+    .quick-month-label{
+      min-width:38px;
+      font-size:14px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1665,8 +1720,11 @@
       <div class="section-head">
         <h2 class="section-title">📋 本月繳費項目 <span id="itemCount" class="item-count"></span></h2>
         <div class="bills-header-actions">
-          <button class="month-jump-btn" id="prevMonthQuick" type="button">上月</button>
-          <button class="month-jump-btn" id="nextMonthQuick" type="button">下月</button>
+          <div class="quick-month-switch" aria-label="快速切換月份">
+            <button class="month-arrow-btn" id="prevMonthQuick" type="button" aria-label="上個月">‹</button>
+            <span class="quick-month-label" id="quickMonthLabel">8月</span>
+            <button class="month-arrow-btn" id="nextMonthQuick" type="button" aria-label="下個月">›</button>
+          </div>
           <button class="edit-toggle" id="editModeBtn">編輯</button>
         </div>
       </div>
@@ -2317,8 +2375,12 @@ function money(n){
 function renderMonthTitle(){
   const inlineYear = document.getElementById('inlineYear');
   const inlineMonth = document.getElementById('inlineMonth');
+  const quickMonthLabel = document.getElementById('quickMonthLabel');
+
   if(inlineYear) inlineYear.value = String(current.year);
   if(inlineMonth) inlineMonth.value = String(current.month);
+  if(quickMonthLabel) quickMonthLabel.textContent = `${current.month}月`;
+
   applyMonthlyBackground(current.month);
 }
 
