@@ -1701,6 +1701,16 @@
     color:#9a8069;
   }
 
+
+  /* ===== 設定：立即備份 ===== */
+  .settings-actions{
+    margin:14px 0;
+  }
+
+  .settings-actions .btn{
+    width:100%;
+  }
+
 </style>
 </head>
 <body>
@@ -1836,7 +1846,11 @@
   <div class="dialog-body">
     <h2>設定</h2>
     <p class="tip">這裡是獨立的「設定」入口。先確認底部導覽功能，設定項目之後再整理。</p>
-    <div class="dialog-actions">
+    
+    <div class="settings-actions">
+      <button class="btn btn-primary" type="button" id="settingsQuickBackup">立即備份</button>
+    </div>
+<div class="dialog-actions">
       <button class="btn btn-secondary" type="button" id="closeSettings">關閉</button>
     </div>
   </div>
@@ -3441,6 +3455,11 @@ document.getElementById('moreBtn').addEventListener('click', () => {
 });
 document.getElementById('closeSettings').addEventListener('click', () => {
   settingsDialog.close();
+});
+
+document.getElementById('settingsQuickBackup').addEventListener('click', () => {
+  createBackup('設定－立即備份', {force:true});
+  alert('已完成備份');
 });
 
 
