@@ -2958,6 +2958,11 @@
       bottom:12px !important;
     }
   }
+
+  /* 手機長按排序：避免系統文字選取選單 */
+  .bill-item-reorderable{
+    -webkit-touch-callout:none;
+  }
 </style>
 </head>
 <body>
@@ -3904,18 +3909,24 @@ function renderMonthTitle(){
 
 
 function enableBillItemLongPressReorder(row, wrap, itemId){
-  const HOLD_DELAY = 520;
-  const MOVE_CANCEL_DISTANCE = 10;
+  const HOLD_DELAY = 480;
+  const MOVE_CANCEL_DISTANCE = 14;
   let holdTimer = null;
   let activePointerId = null;
+  let activeTouchId = null;
   let startX = 0;
   let startY = 0;
   let dragging = false;
+  let dragInput = '';
   let previousTouchAction = '';
 
   row.dataset.itemId = String(itemId);
   row.classList.add('bill-item-reorderable');
   row.title = '長按後可上下拖曳排序';
+
+  const isInteractiveTarget = target =>
+    Boolean(target.closest('input, button, textarea, select, a, label')) ||
+    row.classList.contains('editing-text');
 
   const clearHoldTimer = () => {
     if(holdTimer !== null){
@@ -3929,31 +3940,38 @@ function enableBillItemLongPressReorder(row, wrap, itemId){
     row.classList.remove('bill-item-pressing');
   };
 
-  const activateDrag = () => {
-    if(activePointerId === null || !row.isConnected) return;
+  const activateDrag = inputType => {
+    if(!row.isConnected) return;
+    if(inputType === 'pointer' && activePointerId === null) return;
+    if(inputType === 'touch' && activeTouchId === null) return;
+
     dragging = true;
+    dragInput = inputType;
     row.classList.remove('bill-item-pressing');
     row.classList.add('bill-item-dragging');
     wrap.classList.add('bill-list-reordering');
     previousTouchAction = row.style.touchAction;
     row.style.touchAction = 'none';
     document.body.classList.add('bill-reorder-active');
-    try{ row.setPointerCapture(activePointerId); }catch(error){}
+    try{ window.getSelection()?.removeAllRanges(); }catch(error){}
+    if(inputType === 'pointer'){
+      try{ row.setPointerCapture(activePointerId); }catch(error){}
+    }
     if(navigator.vibrate) navigator.vibrate(25);
   };
 
-  const moveRowToPointer = pointerY => {
+  const moveRowToPosition = clientY => {
     const siblings = [...wrap.querySelectorAll('.item:not(.bill-item-dragging)')];
     const nextRow = siblings.find(candidate => {
       const rect = candidate.getBoundingClientRect();
-      return pointerY < rect.top + rect.height / 2;
+      return clientY < rect.top + rect.height / 2;
     });
     wrap.insertBefore(row, nextRow || null);
 
     const edge = 72;
-    if(pointerY < edge){
+    if(clientY < edge){
       window.scrollBy(0, -10);
-    }else if(pointerY > window.innerHeight - edge){
+    }else if(clientY > window.innerHeight - edge){
       window.scrollBy(0, 10);
     }
   };
@@ -3969,46 +3987,46 @@ function enableBillItemLongPressReorder(row, wrap, itemId){
     }
   };
 
-  const finishPointer = (shouldSave, event) => {
+  const finishDrag = shouldSave => {
     clearHoldTimer();
     row.classList.remove('bill-item-pressing');
+    if(!dragging) return false;
 
-    if(dragging){
-      if(event){
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      if(shouldSave) saveCurrentDomOrder();
-      row.classList.remove('bill-item-dragging');
-      wrap.classList.remove('bill-list-reordering');
-      row.style.touchAction = previousTouchAction;
-      document.body.classList.remove('bill-reorder-active');
+    if(shouldSave) saveCurrentDomOrder();
+    row.classList.remove('bill-item-dragging');
+    wrap.classList.remove('bill-list-reordering');
+    row.style.touchAction = previousTouchAction;
+    document.body.classList.remove('bill-reorder-active');
+    if(dragInput === 'pointer'){
       try{ row.releasePointerCapture(activePointerId); }catch(error){}
-      dragging = false;
-      activePointerId = null;
-      render();
-      return;
     }
-
+    dragging = false;
+    dragInput = '';
     activePointerId = null;
+    activeTouchId = null;
+    render();
+    return true;
+  };
+
+  const beginPress = (clientX, clientY, inputType) => {
+    startX = clientX;
+    startY = clientY;
+    row.classList.add('bill-item-pressing');
+    clearHoldTimer();
+    holdTimer = window.setTimeout(() => activateDrag(inputType), HOLD_DELAY);
   };
 
   row.addEventListener('pointerdown', event => {
+    if(event.pointerType === 'touch') return;
     if(event.pointerType === 'mouse' && event.button !== 0) return;
-    if(event.target.closest('input, button, textarea, select, a, label')) return;
-    if(row.classList.contains('editing-text')) return;
+    if(isInteractiveTarget(event.target)) return;
 
     activePointerId = event.pointerId;
-    startX = event.clientX;
-    startY = event.clientY;
-    row.classList.add('bill-item-pressing');
-    clearHoldTimer();
-    holdTimer = window.setTimeout(activateDrag, HOLD_DELAY);
+    beginPress(event.clientX, event.clientY, 'pointer');
   });
 
   row.addEventListener('pointermove', event => {
-    if(event.pointerId !== activePointerId) return;
-
+    if(event.pointerType === 'touch' || event.pointerId !== activePointerId) return;
     if(!dragging){
       const distance = Math.hypot(event.clientX - startX, event.clientY - startY);
       if(distance > MOVE_CANCEL_DISTANCE){
@@ -4019,18 +4037,73 @@ function enableBillItemLongPressReorder(row, wrap, itemId){
     }
 
     event.preventDefault();
-    moveRowToPointer(event.clientY);
+    moveRowToPosition(event.clientY);
   });
 
   row.addEventListener('pointerup', event => {
-    if(event.pointerId !== activePointerId) return;
-    finishPointer(true, event);
+    if(event.pointerType === 'touch' || event.pointerId !== activePointerId) return;
+    const wasDragging = finishDrag(true);
+    if(wasDragging){
+      event.preventDefault();
+      event.stopPropagation();
+    }else{
+      clearPressState();
+      activePointerId = null;
+    }
   });
 
   row.addEventListener('pointercancel', event => {
-    if(event.pointerId !== activePointerId) return;
-    finishPointer(false, event);
+    if(event.pointerType === 'touch' || event.pointerId !== activePointerId) return;
+    finishDrag(false);
+    clearPressState();
+    activePointerId = null;
   });
+
+  row.addEventListener('touchstart', event => {
+    if(event.touches.length !== 1 || isInteractiveTarget(event.target)) return;
+    const touch = event.changedTouches[0];
+    activeTouchId = touch.identifier;
+    beginPress(touch.clientX, touch.clientY, 'touch');
+  }, {passive:true});
+
+  row.addEventListener('touchmove', event => {
+    const touch = [...event.touches].find(value => value.identifier === activeTouchId);
+    if(!touch) return;
+
+    if(!dragging){
+      const distance = Math.hypot(touch.clientX - startX, touch.clientY - startY);
+      if(distance > MOVE_CANCEL_DISTANCE){
+        clearPressState();
+        activeTouchId = null;
+      }
+      return;
+    }
+
+    if(event.cancelable) event.preventDefault();
+    event.stopPropagation();
+    moveRowToPosition(touch.clientY);
+  }, {passive:false});
+
+  row.addEventListener('touchend', event => {
+    const touch = [...event.changedTouches].find(value => value.identifier === activeTouchId);
+    if(!touch) return;
+    const wasDragging = finishDrag(true);
+    if(wasDragging){
+      if(event.cancelable) event.preventDefault();
+      event.stopPropagation();
+    }else{
+      clearPressState();
+      activeTouchId = null;
+    }
+  }, {passive:false});
+
+  row.addEventListener('touchcancel', event => {
+    const touch = [...event.changedTouches].find(value => value.identifier === activeTouchId);
+    if(!touch) return;
+    finishDrag(false);
+    clearPressState();
+    activeTouchId = null;
+  }, {passive:false});
 
   row.addEventListener('contextmenu', event => {
     if(dragging || row.classList.contains('bill-item-pressing')){
