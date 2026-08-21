@@ -507,7 +507,7 @@
 
   .favorite-choice{
     display:grid;
-    grid-template-columns:24px minmax(0,1fr) auto;
+    grid-template-columns:24px minmax(0,1fr) auto auto;
     align-items:center;
     gap:10px;
     border:1px solid #eadcc7;
@@ -533,6 +533,22 @@
 
   .favorite-amount{
     font-weight:800;
+  }
+
+  .favorite-delete-btn{
+    border:1px solid #dfb4a7;
+    border-radius:10px;
+    background:#fff7f4;
+    color:#a6533f;
+    padding:7px 9px;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .favorite-delete-btn:active{
+    transform:translateY(1px);
   }
 
   @media (max-width:390px){
@@ -1515,6 +1531,24 @@
     min-width:102px;
   }
 
+  .inline-year-view-btn{
+    flex:0 1 auto;
+    border:1px solid #dfc7a8;
+    border-radius:12px;
+    background:#fffaf2;
+    color:#7b5132;
+    padding:10px 8px;
+    font-size:13px;
+    font-weight:800;
+    line-height:1.2;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+
+  .inline-year-view-btn:active{
+    transform:translateY(1px);
+  }
+
   @media (max-width:390px){
     .inline-date-select{
       font-size:18px;
@@ -1522,6 +1556,10 @@
     }
     #inlineYear{min-width:128px;}
     #inlineMonth{min-width:94px;}
+    .inline-year-view-btn{
+      padding:9px 6px;
+      font-size:12px;
+    }
   }
 
 
@@ -1921,6 +1959,7 @@
             <option value="11">11 月</option>
             <option value="12">12 月</option>
           </select>
+          <button class="inline-year-view-btn" id="inlineYearViewBtn" type="button">檢視整年度</button>
         </div>
 
         <button class="hidden-month-nav" id="prevMonth" aria-label="上個月" tabindex="-1">‹</button>
@@ -1948,7 +1987,7 @@
 
     <section class="card bills-card">
       <div class="section-head">
-        <h2 class="section-title">📋 本月繳費項目 <span id="itemCount" class="item-count"></span></h2>
+        <h2 class="section-title">本月繳費項目 <span id="itemCount" class="item-count"></span></h2>
         <div class="bills-header-actions">
           <div class="quick-month-switch" aria-label="快速切換月份">
             <button class="month-arrow-btn" id="prevMonthQuick" type="button" aria-label="上個月">‹</button>
@@ -1973,7 +2012,7 @@
       </button>
       <button class="concept-action-btn primary-action" id="addBtn" type="button">
         <span class="concept-action-icon">＋</span>
-        <span>記一筆支出</span>
+        <span>新增支出</span>
       </button>
     </section>
 
@@ -3085,19 +3124,30 @@ function renderFavorites(){
   }
 
   favorites.forEach(fav => {
-    const row = document.createElement('label');
+    const row = document.createElement('div');
     row.className = 'favorite-choice';
     row.innerHTML = `
-      <input type="checkbox" data-id="${fav.id}">
+      <input type="checkbox" data-id="${fav.id}" aria-label="選取常用項目">
       <div>
         <div class="favorite-name"></div>
         ${fav.note ? '<div class="favorite-note"></div>' : ''}
       </div>
       <div class="favorite-amount">${money(fav.amount)}</div>
+      <button class="favorite-delete-btn" type="button">刪除</button>
     `;
     row.querySelector('.favorite-name').textContent = fav.name;
     const note = row.querySelector('.favorite-note');
     if(note) note.textContent = fav.note;
+
+    const deleteBtn = row.querySelector('.favorite-delete-btn');
+    deleteBtn.setAttribute('aria-label', `刪除常用項目 ${fav.name}`);
+    deleteBtn.addEventListener('click', () => {
+      if(!confirm(`確定要刪除常用項目「${fav.name}」嗎？`)) return;
+      const nextFavorites = loadFavorites().filter(item => item.id !== fav.id);
+      saveFavorites(nextFavorites);
+      renderFavorites();
+    });
+
     list.appendChild(row);
   });
 }
@@ -3267,6 +3317,11 @@ function renderYearView(year){
     </div>
   `;
 }
+
+document.getElementById('inlineYearViewBtn').addEventListener('click', () => {
+  renderYearView(current.year);
+  yearViewDialog.showModal();
+});
 
 document.getElementById('closeYearView').addEventListener('click', () => {
   yearViewDialog.close();
