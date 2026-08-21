@@ -1749,6 +1749,32 @@
     min-height:48px !important;
   }
 
+
+  /* ===== 複製本月明細到下個月 ===== */
+  .copy-next-btn{
+    border:1px solid #dfc7a8;
+    border-radius:12px;
+    background:#fffaf2;
+    color:#5b402c;
+    min-height:38px;
+    padding:7px 10px;
+    font-size:14px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .copy-next-btn:active{
+    transform:translateY(1px);
+  }
+
+  @media (max-width:390px){
+    .copy-next-btn{
+      padding-left:8px;
+      padding-right:8px;
+      font-size:13px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1834,6 +1860,7 @@
             <span class="quick-month-label" id="quickMonthLabel">8月</span>
             <button class="month-arrow-btn" id="nextMonthQuick" type="button" aria-label="下個月">›</button>
           </div>
+          <button class="copy-next-btn" id="copyNextMonthBtn" type="button">複製下月</button>
           <button class="edit-toggle" id="editModeBtn">編輯</button>
         </div>
       </div>
@@ -3224,6 +3251,57 @@ document.getElementById('nextMonthQuick').addEventListener('click', () => {
     current.year += 1;
   }
   render();
+});
+
+
+document.getElementById('copyNextMonthBtn').addEventListener('click', () => {
+  const sourceItems = getCurrentItems();
+
+  if(sourceItems.length === 0){
+    alert('本月目前沒有資料可以複製');
+    return;
+  }
+
+  let nextYear = current.year;
+  let nextMonth = current.month + 1;
+
+  if(nextMonth > 12){
+    nextMonth = 1;
+    nextYear += 1;
+  }
+
+  const sourceLabel = `${current.year} 年 ${current.month} 月`;
+  const targetLabel = `${nextYear} 年 ${nextMonth} 月`;
+
+  const all = loadAllMonths();
+  const targetKey = monthKey(nextYear, nextMonth);
+  const existingTarget = all[targetKey] || [];
+
+  let message =
+    `要把 ${sourceLabel} 的最新明細複製到 ${targetLabel} 嗎？\n\n` +
+    `項目名稱、金額、備註都會複製，繳費狀態會全部重設為未繳。`;
+
+  if(existingTarget.length > 0){
+    message += `\n\n⚠️ ${targetLabel} 已有 ${existingTarget.length} 筆資料，會用本月最新明細整份取代。`;
+  }
+
+  if(!confirm(message)) return;
+
+  // 覆蓋前先備份，避免按錯後無法恢復
+  createBackup(`複製 ${sourceLabel} 到 ${targetLabel} 前`, {force:true});
+
+  const copiedItems = sourceItems.map(item => ({
+    ...item,
+    id: Date.now().toString() + Math.random().toString(16).slice(2),
+    paid: false
+  }));
+
+  all[targetKey] = copiedItems;
+  saveAllMonths(all);
+
+  createBackup(`已複製 ${sourceLabel} 到 ${targetLabel}`, {force:true});
+
+  alert(`完成！\n${targetLabel} 已更新成 ${sourceLabel} 的最新明細。\n繳費狀態已全部重設為未繳。`);
 });
 
 document.getElementById('editModeBtn').addEventListener('click', () => {
