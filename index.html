@@ -856,6 +856,16 @@
     line-height:1.35;
     color:#60442e;
   }
+  .book-title-strip{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px 24px 8px;
+    background:var(--bg);
+  }
+  .book-title-strip .hero-title-editable{
+    text-align:center !important;
+  }
 
   .hero-subtitle{
     margin-top:22px;
@@ -1977,11 +1987,11 @@
 </head>
 <body>
 <div class="app-shell">
-  <header class="hero" id="monthlyHero">
-    <div class="hero-copy">
-      <div class="title-row"><button class="hero-title hero-title-editable" id="bookTitle" type="button" aria-label="修改記帳本名稱">花錢如流水</button></div>
-    </div>
-  </header>
+  <header class="hero" id="monthlyHero"></header>
+
+  <div class="book-title-strip">
+    <button class="hero-title hero-title-editable" id="bookTitle" type="button" aria-label="修改記帳本名稱">花錢如流水</button>
+  </div>
 
   <main class="container">
     <section class="card month-summary-card">
