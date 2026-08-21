@@ -1479,6 +1479,51 @@
     box-sizing:border-box !important;
   }
 
+
+  /* ===== 年、月分開單獨選擇 ===== */
+  .month-row-reference{
+    justify-content:flex-start !important;
+    margin-bottom:14px !important;
+  }
+
+  .inline-month-selectors{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+  }
+
+  .inline-date-select{
+    appearance:auto;
+    -webkit-appearance:auto;
+    border:1px solid #dfc7a8;
+    border-radius:12px;
+    background:#fffaf2;
+    color:#5b402c;
+    font-size:20px;
+    font-weight:800;
+    line-height:1.2;
+    padding:10px 12px;
+    min-height:46px;
+  }
+
+  #inlineYear{
+    min-width:138px;
+  }
+
+  #inlineMonth{
+    min-width:102px;
+  }
+
+  @media (max-width:390px){
+    .inline-date-select{
+      font-size:18px;
+      padding:9px 10px;
+    }
+    #inlineYear{min-width:128px;}
+    #inlineMonth{min-width:94px;}
+  }
+
 </style>
 </head>
 <body>
@@ -1493,22 +1538,44 @@
   <main class="container">
     <section class="card month-summary-card">
       <div class="month-row concept-month-row month-row-reference">
-        <div class="month-display-left">
-          <div class="calendar-month-tile" aria-hidden="true">
-            <span class="calendar-rings">● ●</span>
-            <span class="calendar-month-number" id="monthBadge">8月</span>
-          </div>
-          <div class="month-year-label">
-            <span class="month-title" id="monthTitle"></span>
-            <span class="down-arrow">⌄</span>
-          </div>
-        </div>
+        <div class="inline-month-selectors" aria-label="選擇年份與月份">
+          <select id="inlineYear" class="inline-date-select" aria-label="選擇年份">
+            <option value="2022">2022 年</option>
+            <option value="2023">2023 年</option>
+            <option value="2024">2024 年</option>
+            <option value="2025">2025 年</option>
+            <option value="2026">2026 年</option>
+            <option value="2027">2027 年</option>
+            <option value="2028">2028 年</option>
+            <option value="2029">2029 年</option>
+            <option value="2030">2030 年</option>
+            <option value="2031">2031 年</option>
+            <option value="2032">2032 年</option>
+            <option value="2033">2033 年</option>
+            <option value="2034">2034 年</option>
+            <option value="2035">2035 年</option>
+            <option value="2036">2036 年</option>
+            <option value="2037">2037 年</option>
+            <option value="2038">2038 年</option>
+            <option value="2039">2039 年</option>
+            <option value="2040">2040 年</option>
+          </select>
 
-        <button class="switch-month-btn" id="openMonthPicker" type="button">
-          <span class="switch-calendar">▣</span>
-          <span>切換月份</span>
-          <span class="switch-chevron">›</span>
-        </button>
+          <select id="inlineMonth" class="inline-date-select" aria-label="選擇月份">
+            <option value="1">1 月</option>
+            <option value="2">2 月</option>
+            <option value="3">3 月</option>
+            <option value="4">4 月</option>
+            <option value="5">5 月</option>
+            <option value="6">6 月</option>
+            <option value="7">7 月</option>
+            <option value="8">8 月</option>
+            <option value="9">9 月</option>
+            <option value="10">10 月</option>
+            <option value="11">11 月</option>
+            <option value="12">12 月</option>
+          </select>
+        </div>
 
         <button class="hidden-month-nav" id="prevMonth" aria-label="上個月" tabindex="-1">‹</button>
         <button class="hidden-month-nav" id="nextMonth" aria-label="下個月" tabindex="-1">›</button>
@@ -2192,10 +2259,10 @@ function money(n){
 }
 
 function renderMonthTitle(){
-  document.getElementById('monthTitle').textContent =
-    `${current.year} 年 ${current.month} 月`;
-  const badge = document.getElementById('monthBadge');
-  if(badge) badge.textContent = `${current.month}月`;
+  const inlineYear = document.getElementById('inlineYear');
+  const inlineMonth = document.getElementById('inlineMonth');
+  if(inlineYear) inlineYear.value = String(current.year);
+  if(inlineMonth) inlineMonth.value = String(current.month);
   applyMonthlyBackground(current.month);
 }
 
@@ -2535,13 +2602,28 @@ function fillYearOptions(){
   }
 }
 
+
 fillYearOptions();
 
-document.getElementById('openMonthPicker').addEventListener('click', () => {
-  document.getElementById('pickYear').value = current.year;
-  document.getElementById('pickMonth').value = current.month;
-  monthPickerDialog.showModal();
+const inlineYearSelect = document.getElementById('inlineYear');
+const inlineMonthSelect = document.getElementById('inlineMonth');
+
+inlineYearSelect.addEventListener('change', () => {
+  const year = Number(inlineYearSelect.value);
+  if(year >= 2022 && year <= 2040){
+    current.year = year;
+    render();
+  }
 });
+
+inlineMonthSelect.addEventListener('change', () => {
+  const month = Number(inlineMonthSelect.value);
+  if(month >= 1 && month <= 12){
+    current.month = month;
+    render();
+  }
+});
+
 
 document.getElementById('cancelMonthPicker').addEventListener('click', () => {
   monthPickerDialog.close();
