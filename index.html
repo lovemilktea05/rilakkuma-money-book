@@ -3028,6 +3028,15 @@
       padding-right:50px;
     }
   }
+
+  /* 移除年度關閉叉的藍色焦點外框 */
+  #yearViewDialog .year-view-close,
+  #yearViewDialog .year-view-close:focus,
+  #yearViewDialog .year-view-close:focus-visible,
+  #yearViewDialog .year-view-close:active{
+    outline:none !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
 </style>
 </head>
 <body>
