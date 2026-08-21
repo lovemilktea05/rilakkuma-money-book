@@ -3289,93 +3289,78 @@ body.income-savings-mode .income-savings-page{
 }</style>
 
 <style id="income-record-single-line-fix">
-/* 本月收入記錄：操作方式與本月繳費一致 */
-.finance-list-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:10px;
-}
-.finance-list-head h2{margin:0}
+/* 收入／儲蓄記錄：改為與繳費清單一致的單行排列，編輯固定在最右邊 */
 .finance-record{
   display:grid !important;
-  grid-template-columns:minmax(0,1fr) max-content !important;
+  grid-template-columns:minmax(0,1fr) max-content 34px 56px !important;
   align-items:center !important;
-  gap:10px !important;
-  padding:12px 14px !important;
+  gap:8px !important;
+  padding:11px 12px !important;
 }
-.finance-record-main{min-width:0}
 .finance-record-name{
-  font-weight:900;
   min-width:0;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.finance-record-amount-wrap{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  min-width:100px;
+.finance-record-amount{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  white-space:nowrap;
+  justify-self:end;
 }
-.finance-record-currency{font-size:18px;font-weight:900;color:#6e4a31}
-.finance-record-amount-input{
-  width:100px;
-  max-width:32vw;
-  border:1px solid #e6d1b7;
-  border-radius:10px;
-  background:#fffaf1;
-  color:#6e4a31;
-  text-align:right;
-  padding:6px 4px;
-  font:900 18px inherit;
-  outline:none;
+.finance-record-delete{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  width:32px;
+  height:32px;
+  justify-self:center;
 }
-body:not(.finance-income-edit-mode) #incomeRecordList .finance-record-amount-input{
-  pointer-events:none;
-  border-color:transparent;
-  background:transparent;
-}
-.finance-income-actions{
-  display:none;
-  grid-column:1 / -1;
-  gap:10px;
-  margin-top:2px;
-}
-body.finance-income-edit-mode #incomeRecordList .finance-income-actions{display:flex}
-.finance-income-actions .tiny-btn{
-  border:0;
-  background:transparent;
-  color:#b49782;
-  font-size:12px;
-  padding:2px 0;
-  cursor:pointer;
-}
-.finance-income-actions .delete-income-btn{color:#b46f5b}
-.finance-record-edit-fields{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:8px;
-  grid-column:1 / -1;
-  width:100%;
-}
-.finance-record-edit-fields .edit-input{
-  min-width:0;
-  border:1px solid #e6d1b7;
-  border-radius:10px;
-  background:#fff;
-  color:#6e4a31;
-  padding:8px 10px;
-  font:800 15px inherit;
+.finance-record-edit{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  justify-self:end !important;
+  width:56px;
+  padding:7px 6px;
+  text-align:center;
 }
 @media (max-width:390px){
-  .finance-record{gap:7px !important;padding:10px 11px !important}
-  .finance-record-amount-input{width:92px;font-size:16px}
-  .finance-record-currency{font-size:16px}
+  .finance-record{
+    grid-template-columns:minmax(0,1fr) max-content 30px 52px !important;
+    gap:6px !important;
+    padding:10px 10px !important;
+  }
+  .finance-record-amount{font-size:16px !important;}
+  .finance-record-delete{width:30px;height:30px;font-size:19px;}
+  .finance-record-edit{width:52px;padding:6px 4px;font-size:12px;}
+  .finance-fixed-badge{margin-left:4px;padding:1px 5px;font-size:10px;}
 }
 </style>
 
+
+<style id="money-display-format-fix">
+/* 金額顯示：$ 靠近數字，並統一使用千分位逗號 */
+.price-wrap{
+  gap:4px !important;
+  justify-content:flex-end !important;
+}
+.currency{
+  position:static !important;
+  flex:0 0 auto;
+  margin:0 !important;
+}
+.price-input{
+  flex:0 1 auto !important;
+  width:82px !important;
+  min-width:0 !important;
+  padding:9px 2px !important;
+  text-align:right !important;
+}
+@media (max-width:390px){
+  .price-wrap{gap:3px !important;}
+  .price-input{width:72px !important;padding-left:1px !important;padding-right:1px !important;}
+}
+</style>
 </head>
 <body>
 <div class="app-shell">
@@ -3602,10 +3587,7 @@ body.finance-income-edit-mode #incomeRecordList .finance-income-actions{display:
       </div>
 
       <section class="finance-panel finance-list-panel">
-        <div class="finance-list-head">
-          <h2>本月收入紀錄</h2>
-          <button class="edit-toggle" id="incomeEditModeBtn" type="button">編輯</button>
-        </div>
+        <h2>本月收入紀錄</h2>
         <div id="incomeRecordList" class="finance-record-list"></div>
       </section>
       <section class="finance-panel finance-list-panel">
@@ -4719,7 +4701,7 @@ function render(){
       </div>
       <div class="price-wrap">
         <span class="currency">$</span>
-        <input class="price-input" type="number" inputmode="numeric" min="0" value="${item.amount}">
+        <input class="price-input" type="text" inputmode="numeric" value="${Number(item.amount || 0).toLocaleString('zh-TW')}">
       </div>
     `;
 
@@ -4793,14 +4775,26 @@ function render(){
       }
     });
 
+    input.addEventListener('focus', () => {
+      input.value = String(Number(item.amount || 0));
+      requestAnimationFrame(() => input.select());
+    });
+
     input.addEventListener('input', () => {
       const itemsNow = getCurrentItems();
       const target = itemsNow.find(x => x.id === item.id);
       if(target){
-        target.amount = Number(input.value) || 0;
+        const raw = String(input.value || '').replace(/,/g, '').replace(/[^0-9]/g, '');
+        if(input.value !== raw) input.value = raw;
+        target.amount = Number(raw) || 0;
+        item.amount = target.amount;
         setCurrentItems(itemsNow);
         updateSummary(itemsNow);
       }
+    });
+
+    input.addEventListener('blur', () => {
+      input.value = Number(item.amount || 0).toLocaleString('zh-TW');
     });
 
     favBtn.addEventListener('click', () => {
@@ -5721,13 +5715,9 @@ function renderFinanceRecords(containerId, type, records){
     container.appendChild(empty);
     return;
   }
-
   records.slice().reverse().forEach(record => {
     const row = document.createElement('div');
     row.className = 'finance-record';
-
-    const main = document.createElement('div');
-    main.className = 'finance-record-main';
     const name = document.createElement('div');
     name.className = 'finance-record-name';
     name.textContent = record.name;
@@ -5737,120 +5727,24 @@ function renderFinanceRecords(containerId, type, records){
       badge.textContent = '固定';
       name.appendChild(badge);
     }
-    main.appendChild(name);
-
-    const amountWrap = document.createElement('div');
-    amountWrap.className = 'finance-record-amount-wrap';
-    const currency = document.createElement('span');
-    currency.className = 'finance-record-currency';
-    currency.textContent = '$';
-    const amountInput = document.createElement('input');
-    amountInput.className = 'finance-record-amount-input';
-    amountInput.type = 'number';
-    amountInput.inputMode = 'numeric';
-    amountInput.min = '0';
-    amountInput.value = String(financeAmount(record.amount));
-    amountInput.setAttribute('aria-label', `${record.name}金額`);
-    amountWrap.append(currency, amountInput);
-
-    row.append(main, amountWrap);
-
-    if(type === 'income'){
-      const actions = document.createElement('div');
-      actions.className = 'finance-income-actions';
-
-      const editTextBtn = document.createElement('button');
-      editTextBtn.className = 'tiny-btn edit-income-text-btn';
-      editTextBtn.type = 'button';
-      editTextBtn.textContent = '修改文字';
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'tiny-btn delete-income-btn';
-      deleteBtn.type = 'button';
-      deleteBtn.textContent = '刪除';
-
-      actions.append(editTextBtn, deleteBtn);
-      row.appendChild(actions);
-
-      editTextBtn.addEventListener('click', () => {
-        const currentName = record.name || '';
-        const fields = document.createElement('div');
-        fields.className = 'finance-record-edit-fields';
-        fields.innerHTML = `
-          <input class="edit-input edit-income-name" type="text" maxlength="30">
-          <div class="row-actions">
-            <button class="tiny-btn save-income-text-btn" type="button">儲存文字</button>
-            <button class="tiny-btn cancel-income-text-btn" type="button">取消</button>
-          </div>
-        `;
-        const nameInput = fields.querySelector('.edit-income-name');
-        nameInput.value = currentName;
-        row.replaceChildren(fields);
-        nameInput.focus();
-
-        fields.querySelector('.save-income-text-btn').addEventListener('click', () => {
-          const nextName = nameInput.value.trim();
-          if(!nextName){ alert('收入名稱不能是空白'); return; }
-          const data = loadIncomeSavingsData();
-          const bucket = currentIncomeSavingsBucket(data);
-          const target = bucket.income.find(x => x.id === record.id);
-          if(target){
-            target.name = nextName;
-            target.updatedAt = new Date().toISOString();
-            saveIncomeSavingsData(data);
-          }
-          renderIncomeSavingsPage();
-        });
-        fields.querySelector('.cancel-income-text-btn').addEventListener('click', renderIncomeSavingsPage);
-      });
-
-      deleteBtn.addEventListener('click', () => {
-        if(confirm(`刪除「${record.name}」嗎？`)) deleteIncomeSavingsRecord('income', record.id);
-      });
-
-      amountInput.addEventListener('input', () => {
-        if(!document.body.classList.contains('finance-income-edit-mode')) return;
-        const data = loadIncomeSavingsData();
-        const bucket = currentIncomeSavingsBucket(data);
-        const target = bucket.income.find(x => x.id === record.id);
-        if(target){
-          target.amount = financeAmount(amountInput.value);
-          target.updatedAt = new Date().toISOString();
-          saveIncomeSavingsData(data);
-          const incomeTotal = bucket.income.reduce((sum, item) => sum + financeAmount(item.amount), 0);
-          const savingsTotal = bucket.savings.reduce((sum, item) => sum + financeAmount(item.amount), 0);
-          const paymentTotal = getCurrentItems().reduce((sum, item) => sum + financeAmount(item.amount), 0);
-          document.getElementById('incomePageIncomeTotal').textContent = money(incomeTotal);
-          document.getElementById('incomePageAvailableTotal').textContent = money(incomeTotal - savingsTotal - paymentTotal);
-        }
-      });
-    }else{
-      const edit = document.createElement('button');
-      edit.className = 'finance-record-edit';
-      edit.type = 'button';
-      edit.textContent = '編輯';
-      edit.addEventListener('click', () => editIncomeSavingsRecord(type, record.id));
-      const remove = document.createElement('button');
-      remove.className = 'finance-record-delete';
-      remove.type = 'button';
-      remove.textContent = '×';
-      remove.addEventListener('click', () => deleteIncomeSavingsRecord(type, record.id));
-      row.append(edit, remove);
-    }
-
+    const amount = document.createElement('div');
+    amount.className = 'finance-record-amount';
+    amount.textContent = money(financeAmount(record.amount));
+    const edit = document.createElement('button');
+    edit.className = 'finance-record-edit';
+    edit.type = 'button';
+    edit.textContent = '編輯';
+    edit.setAttribute('aria-label', `編輯${record.name}`);
+    edit.addEventListener('click', () => editIncomeSavingsRecord(type, record.id));
+    const remove = document.createElement('button');
+    remove.className = 'finance-record-delete';
+    remove.type = 'button';
+    remove.setAttribute('aria-label', `刪除${record.name}`);
+    remove.textContent = '×';
+    remove.addEventListener('click', () => deleteIncomeSavingsRecord(type, record.id));
+    row.append(name, amount, edit, remove);
     container.appendChild(row);
   });
-}
-let incomeEditMode = false;
-
-function setIncomeEditMode(on){
-  incomeEditMode = on;
-  document.body.classList.toggle('finance-income-edit-mode', incomeEditMode);
-  const btn = document.getElementById('incomeEditModeBtn');
-  if(btn){
-    btn.classList.toggle('active', incomeEditMode);
-    btn.textContent = incomeEditMode ? '完成' : '編輯';
-  }
 }
 
 function renderIncomeSavingsPage(){
@@ -5875,7 +5769,6 @@ function renderIncomeSavingsPage(){
 
 function showMainPage(pageName){
   const showIncomeSavings = pageName === 'incomeSavings';
-  if(!showIncomeSavings) setIncomeEditMode(false);
   const page = document.getElementById('incomeSavingsPage');
   document.body.classList.toggle('income-savings-mode', showIncomeSavings);
   page.hidden = !showIncomeSavings;
@@ -5884,10 +5777,6 @@ function showMainPage(pageName){
   if(showIncomeSavings) renderIncomeSavingsPage();
   window.scrollTo({top:0, behavior:'smooth'});
 }
-
-document.getElementById('incomeEditModeBtn').addEventListener('click', () => {
-  setIncomeEditMode(!incomeEditMode);
-});
 
 document.getElementById('navHome').addEventListener('click', () => {
   showMainPage('payment');
