@@ -2707,6 +2707,50 @@
       height:48px;
     }
   }
+
+  /* 繳費項目：長按後上下拖曳排序 */
+  .bill-item-reorderable{
+    cursor:grab;
+    touch-action:pan-y;
+    transition:transform .16s ease, box-shadow .16s ease, opacity .16s ease, background-color .16s ease;
+  }
+
+  .bill-item-reorderable.bill-item-pressing{
+    user-select:none;
+    -webkit-user-select:none;
+    background-color:rgba(255,245,225,.72);
+    transform:scale(.995);
+  }
+
+  .bill-item-reorderable.bill-item-dragging{
+    position:relative;
+    z-index:40;
+    cursor:grabbing;
+    touch-action:none !important;
+    user-select:none;
+    -webkit-user-select:none;
+    background-color:#fff9ed !important;
+    box-shadow:0 12px 26px rgba(105,69,37,.22);
+    transform:scale(1.018);
+    border-radius:17px;
+  }
+
+  .bill-list-reordering .item:not(.bill-item-dragging){
+    transition:transform .16s ease;
+  }
+
+  body.bill-reorder-active{
+    user-select:none;
+    -webkit-user-select:none;
+    cursor:grabbing;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .bill-item-reorderable,
+    .bill-list-reordering .item{
+      transition:none !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -3650,6 +3694,143 @@ function renderMonthTitle(){
   applyMonthlyBackground(current.month);
 }
 
+
+function enableBillItemLongPressReorder(row, wrap, itemId){
+  const HOLD_DELAY = 520;
+  const MOVE_CANCEL_DISTANCE = 10;
+  let holdTimer = null;
+  let activePointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let dragging = false;
+  let previousTouchAction = '';
+
+  row.dataset.itemId = String(itemId);
+  row.classList.add('bill-item-reorderable');
+  row.title = '長按後可上下拖曳排序';
+
+  const clearHoldTimer = () => {
+    if(holdTimer !== null){
+      window.clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+  };
+
+  const clearPressState = () => {
+    clearHoldTimer();
+    row.classList.remove('bill-item-pressing');
+  };
+
+  const activateDrag = () => {
+    if(activePointerId === null || !row.isConnected) return;
+    dragging = true;
+    row.classList.remove('bill-item-pressing');
+    row.classList.add('bill-item-dragging');
+    wrap.classList.add('bill-list-reordering');
+    previousTouchAction = row.style.touchAction;
+    row.style.touchAction = 'none';
+    document.body.classList.add('bill-reorder-active');
+    try{ row.setPointerCapture(activePointerId); }catch(error){}
+    if(navigator.vibrate) navigator.vibrate(25);
+  };
+
+  const moveRowToPointer = pointerY => {
+    const siblings = [...wrap.querySelectorAll('.item:not(.bill-item-dragging)')];
+    const nextRow = siblings.find(candidate => {
+      const rect = candidate.getBoundingClientRect();
+      return pointerY < rect.top + rect.height / 2;
+    });
+    wrap.insertBefore(row, nextRow || null);
+
+    const edge = 72;
+    if(pointerY < edge){
+      window.scrollBy(0, -10);
+    }else if(pointerY > window.innerHeight - edge){
+      window.scrollBy(0, 10);
+    }
+  };
+
+  const saveCurrentDomOrder = () => {
+    const currentItems = getCurrentItems();
+    const itemMap = new Map(currentItems.map(item => [String(item.id), item]));
+    const reordered = [...wrap.querySelectorAll('.item')]
+      .map(element => itemMap.get(element.dataset.itemId))
+      .filter(Boolean);
+    if(reordered.length === currentItems.length){
+      setCurrentItems(reordered);
+    }
+  };
+
+  const finishPointer = (shouldSave, event) => {
+    clearHoldTimer();
+    row.classList.remove('bill-item-pressing');
+
+    if(dragging){
+      if(event){
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if(shouldSave) saveCurrentDomOrder();
+      row.classList.remove('bill-item-dragging');
+      wrap.classList.remove('bill-list-reordering');
+      row.style.touchAction = previousTouchAction;
+      document.body.classList.remove('bill-reorder-active');
+      try{ row.releasePointerCapture(activePointerId); }catch(error){}
+      dragging = false;
+      activePointerId = null;
+      render();
+      return;
+    }
+
+    activePointerId = null;
+  };
+
+  row.addEventListener('pointerdown', event => {
+    if(event.pointerType === 'mouse' && event.button !== 0) return;
+    if(event.target.closest('input, button, textarea, select, a, label')) return;
+    if(row.classList.contains('editing-text')) return;
+
+    activePointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    row.classList.add('bill-item-pressing');
+    clearHoldTimer();
+    holdTimer = window.setTimeout(activateDrag, HOLD_DELAY);
+  });
+
+  row.addEventListener('pointermove', event => {
+    if(event.pointerId !== activePointerId) return;
+
+    if(!dragging){
+      const distance = Math.hypot(event.clientX - startX, event.clientY - startY);
+      if(distance > MOVE_CANCEL_DISTANCE){
+        clearPressState();
+        activePointerId = null;
+      }
+      return;
+    }
+
+    event.preventDefault();
+    moveRowToPointer(event.clientY);
+  });
+
+  row.addEventListener('pointerup', event => {
+    if(event.pointerId !== activePointerId) return;
+    finishPointer(true, event);
+  });
+
+  row.addEventListener('pointercancel', event => {
+    if(event.pointerId !== activePointerId) return;
+    finishPointer(false, event);
+  });
+
+  row.addEventListener('contextmenu', event => {
+    if(dragging || row.classList.contains('bill-item-pressing')){
+      event.preventDefault();
+    }
+  });
+}
+
 function render(){
   renderBookTitle();
   renderMonthTitle();
@@ -3663,7 +3844,7 @@ function render(){
     wrap.innerHTML = `
       <div class="empty">
         還沒有本月繳費項目 🐻<br>
-        點「＋ 新增」或從「⭐ 常用項目」加入
+        點「新增支出」或從「常用項目」加入
       </div>
     `;
     updateSummary(items);
@@ -3793,6 +3974,8 @@ function render(){
     });
 
     wrap.appendChild(row);
+
+    enableBillItemLongPressReorder(row, wrap, item.id);
   });
 
   updateSummary(items);
