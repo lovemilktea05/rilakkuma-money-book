@@ -3287,6 +3287,56 @@ body.income-savings-mode .income-savings-page{
   .finance-annual-summary{grid-template-columns:1fr 1fr}
   .finance-annual-months{grid-template-columns:1fr}
 }</style>
+
+<style id="income-record-single-line-fix">
+/* 收入／儲蓄記錄：改為與繳費清單一致的單行排列，編輯固定在最右邊 */
+.finance-record{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) max-content 34px 56px !important;
+  align-items:center !important;
+  gap:8px !important;
+  padding:11px 12px !important;
+}
+.finance-record-name{
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.finance-record-amount{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  white-space:nowrap;
+  justify-self:end;
+}
+.finance-record-delete{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  width:32px;
+  height:32px;
+  justify-self:center;
+}
+.finance-record-edit{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  justify-self:end !important;
+  width:56px;
+  padding:7px 6px;
+  text-align:center;
+}
+@media (max-width:390px){
+  .finance-record{
+    grid-template-columns:minmax(0,1fr) max-content 30px 52px !important;
+    gap:6px !important;
+    padding:10px 10px !important;
+  }
+  .finance-record-amount{font-size:16px !important;}
+  .finance-record-delete{width:30px;height:30px;font-size:19px;}
+  .finance-record-edit{width:52px;padding:6px 4px;font-size:12px;}
+  .finance-fixed-badge{margin-left:4px;padding:1px 5px;font-size:10px;}
+}
+</style>
+
 </head>
 <body>
 <div class="app-shell">
