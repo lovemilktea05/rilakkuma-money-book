@@ -1547,6 +1547,44 @@
     grid-template-columns:1fr !important;
   }
 
+
+  /* ===== 本月繳費標題右側：上月／下月／編輯 ===== */
+  .bills-header-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:0 0 auto;
+  }
+
+  .month-jump-btn{
+    border:1px solid #dfc7a8;
+    border-radius:12px;
+    background:#fffaf2;
+    color:#5b402c;
+    min-height:38px;
+    padding:7px 10px;
+    font-size:14px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .month-jump-btn:active{
+    transform:translateY(1px);
+  }
+
+  @media (max-width:390px){
+    .bills-header-actions{
+      gap:4px;
+    }
+    .month-jump-btn,
+    .edit-toggle{
+      min-width:auto !important;
+      padding-left:8px !important;
+      padding-right:8px !important;
+      font-size:13px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1626,7 +1664,11 @@
     <section class="card bills-card">
       <div class="section-head">
         <h2 class="section-title">📋 本月繳費項目 <span id="itemCount" class="item-count"></span></h2>
-        <button class="edit-toggle" id="editModeBtn">編輯</button>
+        <div class="bills-header-actions">
+          <button class="month-jump-btn" id="prevMonthQuick" type="button">上月</button>
+          <button class="month-jump-btn" id="nextMonthQuick" type="button">下月</button>
+          <button class="edit-toggle" id="editModeBtn">編輯</button>
+        </div>
       </div>
       <div id="items"></div>
     </section>
@@ -2787,6 +2829,25 @@ function setEditMode(on){
     btn.textContent = editMode ? '完成' : '編輯';
   }
 }
+
+
+document.getElementById('prevMonthQuick').addEventListener('click', () => {
+  current.month -= 1;
+  if(current.month < 1){
+    current.month = 12;
+    current.year -= 1;
+  }
+  render();
+});
+
+document.getElementById('nextMonthQuick').addEventListener('click', () => {
+  current.month += 1;
+  if(current.month > 12){
+    current.month = 1;
+    current.year += 1;
+  }
+  render();
+});
 
 document.getElementById('editModeBtn').addEventListener('click', () => {
   setEditMode(!editMode);
