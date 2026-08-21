@@ -1724,6 +1724,31 @@
     width:100% !important;
   }
 
+
+  /* ===== 設定頁：備份按鈕固定顯示 ===== */
+  .settings-backup-section{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px !important;
+    width:100% !important;
+    margin:18px 0 20px !important;
+  }
+
+  .settings-section-title{
+    font-size:16px !important;
+    font-weight:800 !important;
+    color:#5b402c !important;
+    margin-bottom:2px !important;
+  }
+
+  .settings-backup-section .btn{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    min-height:48px !important;
+  }
+
 </style>
 </head>
 <body>
@@ -1858,15 +1883,26 @@
 <dialog id="settingsDialog">
   <div class="dialog-body">
     <h2>設定</h2>
-    <p class="tip">這裡是獨立的「設定」入口。先確認底部導覽功能，設定項目之後再整理。</p>
-    
-    <div class="settings-actions">
-      <button class="btn btn-primary" type="button" id="settingsQuickBackup">立即備份</button>
-      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔</button>
-      <button class="btn btn-secondary" type="button" id="importBackupBtn">匯入備份檔</button>
+
+    <div class="settings-backup-section">
+      <div class="settings-section-title">備份與還原</div>
+
+      <button class="btn btn-primary" type="button" id="settingsQuickBackup">
+        立即備份
+      </button>
+
+      <button class="btn btn-secondary" type="button" id="exportBackupBtn">
+        匯出備份檔
+      </button>
+
+      <button class="btn btn-secondary" type="button" id="importBackupBtn">
+        匯入備份檔
+      </button>
+
       <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
     </div>
-<div class="dialog-actions">
+
+    <div class="dialog-actions">
       <button class="btn btn-secondary" type="button" id="closeSettings">關閉</button>
     </div>
   </div>
