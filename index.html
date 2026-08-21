@@ -1978,7 +1978,7 @@
     <div class="settings-section">
       <div class="settings-section-title">備份與還原</div>
       <button class="btn btn-primary" type="button" id="settingsQuickBackup">立即備份</button>
-      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔</button>
+      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔（選位置）</button>
       <button class="btn btn-secondary" type="button" id="importBackupBtn">匯入備份檔</button>
       <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
     </div>
@@ -2665,7 +2665,7 @@ function formatBackupTime(iso){
   }
 }
 
-function exportBackupFile(){
+async function exportBackupFile(){
   const snapshot = makeSnapshot('手動匯出備份');
   createBackup('手動匯出備份', {force:true});
 
@@ -2675,15 +2675,40 @@ function exportBackupFile(){
     snapshot
   };
 
+  const jsonText = JSON.stringify(payload, null, 2);
+  const stamp = new Date().toISOString().slice(0,10);
+  const fileName = `記帳本備份-${stamp}.json`;
+  const file = new File(
+    [jsonText],
+    fileName,
+    {type:'application/json;charset=utf-8'}
+  );
+
+  try{
+    if(
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({files:[file]})
+    ){
+      await navigator.share({
+        title:'記帳本備份',
+        text:'請選擇「儲存到檔案」，再挑選要保存的位置。',
+        files:[file]
+      });
+      return;
+    }
+  }catch(err){
+    if(err && err.name === 'AbortError') return;
+  }
+
   const blob = new Blob(
-    [JSON.stringify(payload, null, 2)],
+    [jsonText],
     {type:'application/json;charset=utf-8'}
   );
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0,10);
   a.href = url;
-  a.download = `記帳本備份-${stamp}.json`;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();
