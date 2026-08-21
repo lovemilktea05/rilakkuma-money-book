@@ -1625,6 +1625,36 @@
     transform:translateY(1px);
   }
 
+  /* ===== 列表下方：上一頁／下一頁 ===== */
+  .bottom-month-pager{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    margin:0 auto 2px;
+  }
+
+  .bottom-page-arrow{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:48px;
+    height:42px;
+    border:1px solid #dfc7a8;
+    border-radius:14px;
+    background:#fffaf2;
+    color:#5b402c;
+    font-size:30px;
+    font-weight:800;
+    line-height:1;
+    cursor:pointer;
+    box-shadow:0 5px 14px rgba(140,96,54,.08);
+  }
+
+  .bottom-page-arrow:active{
+    transform:translateY(1px);
+  }
+
   @media (max-width:390px){
     .quick-month-switch{
       gap:2px;
@@ -1932,6 +1962,11 @@
       <div id="items"></div>
     </section>
 
+    <div class="bottom-month-pager" role="group" aria-label="切換上一頁或下一頁">
+      <button class="bottom-page-arrow" id="prevMonthBottom" type="button" aria-label="上一頁（上個月）" title="上一頁">‹</button>
+      <button class="bottom-page-arrow" id="nextMonthBottom" type="button" aria-label="下一頁（下個月）" title="下一頁">›</button>
+    </div>
+
     <section class="concept-actions">
       <button class="concept-action-btn secondary-action" id="favoritesBtn" type="button">
         <span>常用項目</span>
@@ -1978,7 +2013,7 @@
     <div class="settings-section">
       <div class="settings-section-title">備份與還原</div>
       <button class="btn btn-primary" type="button" id="settingsQuickBackup">立即備份</button>
-      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔（選位置）</button>
+      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔</button>
       <button class="btn btn-secondary" type="button" id="importBackupBtn">匯入備份檔</button>
       <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
     </div>
@@ -3112,6 +3147,8 @@ function shiftMonth(delta){
 
 document.getElementById('prevMonth').addEventListener('click', () => shiftMonth(-1));
 document.getElementById('nextMonth').addEventListener('click', () => shiftMonth(1));
+document.getElementById('prevMonthBottom').addEventListener('click', () => shiftMonth(-1));
+document.getElementById('nextMonthBottom').addEventListener('click', () => shiftMonth(1));
 
 const monthPickerDialog = document.getElementById('monthPickerDialog');
 
