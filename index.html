@@ -1640,6 +1640,67 @@
     }
   }
 
+
+  /* ===== 備份管理 ===== */
+  .backup-actions{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:9px;
+    margin:12px 0;
+  }
+
+  .backup-note{
+    margin:10px 0 14px;
+    padding:10px 12px;
+    border-radius:12px;
+    background:#fff8eb;
+    color:#76563c;
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .backup-history-title{
+    font-weight:800;
+    color:#5b402c;
+    margin:12px 0 8px;
+  }
+
+  .backup-history-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:320px;
+    overflow-y:auto;
+  }
+
+  .backup-history-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 11px;
+    border:1px solid #ead8c0;
+    border-radius:12px;
+    background:#fffdf8;
+  }
+
+  .backup-history-info{
+    min-width:0;
+    flex:1;
+  }
+
+  .backup-history-reason{
+    font-weight:800;
+    color:#5b402c;
+    overflow-wrap:anywhere;
+  }
+
+  .backup-history-time{
+    margin-top:3px;
+    font-size:12px;
+    color:#9a8069;
+  }
+
 </style>
 </head>
 <body>
@@ -1788,7 +1849,7 @@
     <div class="more-menu">
       <button class="btn btn-secondary" type="button" id="moreFixed">固定繳費</button>
       <button class="btn btn-secondary" type="button" id="moreImport">匯入備忘錄</button>
-      <button class="btn btn-secondary" type="button" id="moreRestore">還原上一次備份</button>
+      <button class="btn btn-secondary" type="button" id="moreBackup">備份管理</button>
     </div>
 
     <div class="danger-zone">
@@ -1801,6 +1862,30 @@
 
     <div class="dialog-actions">
       <button class="btn btn-primary" type="button" id="closeMore">完成</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="backupDialog">
+  <div class="dialog-body">
+    <h2>備份管理</h2>
+
+    <div class="backup-actions">
+      <button class="btn btn-primary" type="button" id="manualBackupBtn">立即備份</button>
+      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔</button>
+      <button class="btn btn-secondary" type="button" id="importBackupBtn">匯入備份檔</button>
+      <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
+    </div>
+
+    <div class="backup-note">
+      平常新增、修改、勾選資料後也會自動留下備份。最多保留最近 12 份。
+    </div>
+
+    <div class="backup-history-title">最近備份</div>
+    <div id="backupHistoryList" class="backup-history-list"></div>
+
+    <div class="dialog-actions">
+      <button class="btn btn-primary" type="button" id="closeBackup">完成</button>
     </div>
   </div>
 </dialog>
@@ -2231,6 +2316,8 @@ function applyMonthlyBackground(month){
 const MONTHS_KEY = 'bear-money-book-months-v1';
 const FAVORITES_KEY = 'bear-money-book-favorites-v1';
 const BACKUP_KEY = 'bear-money-book-last-backup-v1';
+const BACKUP_HISTORY_KEY = 'bear-money-book-backup-history-v2';
+const BACKUP_HISTORY_LIMIT = 12;
 const FIXED_KEY = 'bear-money-book-fixed-v1';
 const TITLE_KEY = 'bear-money-book-title-v1';
 
@@ -2253,6 +2340,7 @@ function loadAllMonths(){
 
 function saveAllMonths(all){
   localStorage.setItem(MONTHS_KEY, JSON.stringify(all));
+  scheduleAutoBackup();
 }
 
 function loadFavorites(){
@@ -2265,6 +2353,7 @@ function loadFavorites(){
 
 function saveFavorites(list){
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+  scheduleAutoBackup();
 }
 
 function getCurrentItems(){
@@ -2290,6 +2379,7 @@ function loadFixed(){
 
 function saveFixed(list){
   localStorage.setItem(FIXED_KEY, JSON.stringify(list));
+  scheduleAutoBackup();
 }
 
 function ensureFixedForCurrentMonth(){
@@ -2319,18 +2409,75 @@ function ensureFixedForCurrentMonth(){
   if(changed) setCurrentItems(items);
 }
 
-function createBackup(reason){
-  const snapshot = {
-    reason,
+function makeSnapshot(reason){
+  return {
+    version:2,
+    reason:reason || '備份',
     time:new Date().toISOString(),
+    title:loadBookTitle(),
     months:loadAllMonths(),
     favorites:loadFavorites(),
     fixed:loadFixed()
   };
+}
+
+function loadBackupHistory(){
+  try{
+    const list = JSON.parse(localStorage.getItem(BACKUP_HISTORY_KEY)) || [];
+    return Array.isArray(list) ? list : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function saveBackupHistory(list){
+  localStorage.setItem(
+    BACKUP_HISTORY_KEY,
+    JSON.stringify((list || []).slice(0, BACKUP_HISTORY_LIMIT))
+  );
+}
+
+function snapshotDataSignature(snapshot){
+  try{
+    return JSON.stringify({
+      title:snapshot.title || '',
+      months:snapshot.months || {},
+      favorites:snapshot.favorites || [],
+      fixed:snapshot.fixed || []
+    });
+  }catch(e){
+    return '';
+  }
+}
+
+function createBackup(reason, options = {}){
+  const snapshot = makeSnapshot(reason);
+
+  // 舊版「最後一次備份」仍保留，避免舊功能失效。
   localStorage.setItem(BACKUP_KEY, JSON.stringify(snapshot));
+
+  const history = loadBackupHistory();
+  const latest = history[0];
+
+  // 自動備份時，如果資料跟上一份完全相同，就不要重複塞一份。
+  const shouldAdd =
+    options.force === true ||
+    !latest ||
+    snapshotDataSignature(latest) !== snapshotDataSignature(snapshot);
+
+  if(shouldAdd){
+    history.unshift(snapshot);
+    saveBackupHistory(history);
+  }
+
+  return snapshot;
 }
 
 function loadBackup(){
+  const history = loadBackupHistory();
+  if(history.length) return history[0];
+
+  // 相容舊版本
   try{
     return JSON.parse(localStorage.getItem(BACKUP_KEY)) || null;
   }catch(e){
@@ -2338,34 +2485,139 @@ function loadBackup(){
   }
 }
 
-function restoreBackup(){
-  const backup = loadBackup();
+function applySnapshot(backup){
+  if(!backup) return false;
+
+  localStorage.setItem(MONTHS_KEY, JSON.stringify(backup.months || {}));
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(backup.favorites || []));
+  localStorage.setItem(FIXED_KEY, JSON.stringify(backup.fixed || []));
+  if(typeof backup.title === 'string' && backup.title.trim()){
+    localStorage.setItem(TITLE_KEY, backup.title.trim());
+  }
+
+  renderBookTitle();
+  render();
+  return true;
+}
+
+function restoreBackup(snapshot = null){
+  const backup = snapshot || loadBackup();
   if(!backup){
     alert('目前沒有可以還原的備份');
     return;
   }
 
-  if(!confirm('要還原上一次備份嗎？目前資料會先被覆蓋。')){
+  const when = backup.time ? new Date(backup.time).toLocaleString('zh-TW') : '';
+  const label = when ? `\n備份時間：${when}` : '';
+
+  if(!confirm(`要還原這份備份嗎？${label}\n目前資料會先自動備份。`)){
     return;
   }
 
-  // Save current state too, so accidental restore is less risky.
-  const currentSnapshot = {
-    reason:'還原前自動備份',
-    time:new Date().toISOString(),
-    months:loadAllMonths(),
-    favorites:loadFavorites(),
-    fixed:loadFixed()
+  // 還原前先把目前狀態放進歷史，避免按錯後回不去。
+  createBackup('還原前自動備份', {force:true});
+  applySnapshot(backup);
+  alert('備份已還原');
+}
+
+let autoBackupTimer = null;
+function scheduleAutoBackup(){
+  clearTimeout(autoBackupTimer);
+  autoBackupTimer = setTimeout(() => {
+    createBackup('自動備份');
+  }, 900);
+}
+
+function formatBackupTime(iso){
+  try{
+    return new Date(iso).toLocaleString('zh-TW', {
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit'
+    });
+  }catch(e){
+    return iso || '';
+  }
+}
+
+function exportBackupFile(){
+  const snapshot = makeSnapshot('手動匯出備份');
+  createBackup('手動匯出備份', {force:true});
+
+  const payload = {
+    app:'bear-money-book',
+    exportedAt:new Date().toISOString(),
+    snapshot
   };
 
-  localStorage.setItem(MONTHS_KEY, JSON.stringify(backup.months || {}));
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(backup.favorites || []));
-  if(backup.fixed) localStorage.setItem(FIXED_KEY, JSON.stringify(backup.fixed));
+  const blob = new Blob(
+    [JSON.stringify(payload, null, 2)],
+    {type:'application/json;charset=utf-8'}
+  );
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `記帳本備份-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
-  // The state from before restore becomes the new "last backup".
-  localStorage.setItem(BACKUP_KEY, JSON.stringify(currentSnapshot));
-  render();
-  alert('已還原上一次備份');
+function importBackupObject(obj){
+  const snapshot = obj && obj.snapshot ? obj.snapshot : obj;
+  if(!snapshot || typeof snapshot !== 'object' || !snapshot.months){
+    throw new Error('不是有效的記帳本備份檔');
+  }
+
+  createBackup('匯入備份前自動備份', {force:true});
+  applySnapshot(snapshot);
+  createBackup('匯入備份完成', {force:true});
+}
+
+function renderBackupHistory(){
+  const wrap = document.getElementById('backupHistoryList');
+  if(!wrap) return;
+
+  const history = loadBackupHistory();
+  wrap.innerHTML = '';
+
+  if(history.length === 0){
+    wrap.innerHTML = '<div class="empty">目前還沒有備份紀錄</div>';
+    return;
+  }
+
+  history.forEach((backup, index) => {
+    const row = document.createElement('div');
+    row.className = 'backup-history-row';
+
+    const info = document.createElement('div');
+    info.className = 'backup-history-info';
+
+    const reason = document.createElement('div');
+    reason.className = 'backup-history-reason';
+    reason.textContent = backup.reason || '備份';
+
+    const time = document.createElement('div');
+    time.className = 'backup-history-time';
+    time.textContent = formatBackupTime(backup.time);
+
+    info.appendChild(reason);
+    info.appendChild(time);
+
+    const btn = document.createElement('button');
+    btn.className = 'tiny-btn';
+    btn.type = 'button';
+    btn.textContent = '還原';
+    btn.addEventListener('click', () => {
+      restoreBackup(backup);
+      renderBackupHistory();
+    });
+
+    row.appendChild(info);
+    row.appendChild(btn);
+    wrap.appendChild(row);
+  });
 }
 
 function money(n){
@@ -3104,9 +3356,54 @@ document.getElementById('moreImport').addEventListener('click', () => {
 
 
 
-document.getElementById('moreRestore').addEventListener('click', () => {
+const backupDialog = document.getElementById('backupDialog');
+
+document.getElementById('moreBackup').addEventListener('click', () => {
   moreDialog.close();
-  restoreBackup();
+  renderBackupHistory();
+  backupDialog.showModal();
+});
+
+document.getElementById('closeBackup').addEventListener('click', () => {
+  backupDialog.close();
+});
+
+document.getElementById('manualBackupBtn').addEventListener('click', () => {
+  createBackup('手動備份', {force:true});
+  renderBackupHistory();
+  alert('已完成備份');
+});
+
+document.getElementById('exportBackupBtn').addEventListener('click', () => {
+  exportBackupFile();
+  renderBackupHistory();
+});
+
+document.getElementById('importBackupBtn').addEventListener('click', () => {
+  document.getElementById('backupFileInput').click();
+});
+
+document.getElementById('backupFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+
+  try{
+    const text = await file.text();
+    const obj = JSON.parse(text);
+
+    if(!confirm('要匯入這份備份嗎？目前資料會先自動備份。')){
+      e.target.value = '';
+      return;
+    }
+
+    importBackupObject(obj);
+    renderBackupHistory();
+    alert('備份檔已匯入');
+  }catch(err){
+    alert(err && err.message ? err.message : '備份檔讀取失敗');
+  }finally{
+    e.target.value = '';
+  }
 });
 
 document.getElementById('moreClearMonth').addEventListener('click', () => {
@@ -3160,9 +3457,18 @@ document.getElementById('titleForm').addEventListener('submit', (e) => {
   if(!value) return;
   localStorage.setItem(TITLE_KEY, value);
   renderBookTitle();
+  scheduleAutoBackup();
   titleDialog.close();
 });
 
+
+if(loadBackupHistory().length === 0){
+  const existingMonths = loadAllMonths();
+  const hasExistingData = Object.values(existingMonths).some(items => Array.isArray(items) && items.length);
+  if(hasExistingData){
+    createBackup('升級備份功能前的資料', {force:true});
+  }
+}
 render();
 </script>
 </body>
