@@ -1688,6 +1688,18 @@
     min-height:38px;
     padding:2px 4px;
   }
+  .inline-top-month-switch{
+    min-height:46px;
+    padding:2px 7px;
+  }
+  .inline-top-month-switch .month-arrow-btn{
+    width:32px;
+    height:40px;
+  }
+  .inline-top-month-switch .quick-month-label{
+    min-width:48px;
+    font-size:20px;
+  }
 
   .month-arrow-btn{
     border:0;
@@ -1997,7 +2009,7 @@
             <option value="2040">2040 年</option>
           </select>
 
-          <select id="inlineMonth" class="inline-date-select" aria-label="選擇月份">
+          <select id="inlineMonth" class="inline-date-select" aria-label="選擇月份" hidden>
             <option value="1">1 月</option>
             <option value="2">2 月</option>
             <option value="3">3 月</option>
@@ -2011,6 +2023,11 @@
             <option value="11">11 月</option>
             <option value="12">12 月</option>
           </select>
+          <div class="quick-month-switch inline-top-month-switch" aria-label="快速切換月份">
+            <button class="month-arrow-btn" id="prevMonthQuick" type="button" aria-label="上個月">‹</button>
+            <span class="quick-month-label" id="quickMonthLabel">8月</span>
+            <button class="month-arrow-btn" id="nextMonthQuick" type="button" aria-label="下個月">›</button>
+          </div>
           <button class="inline-year-view-btn" id="inlineYearViewBtn" type="button">檢視年度</button>
         </div>
 
@@ -2041,11 +2058,7 @@
       <div class="section-head">
         <h2 class="section-title">本月繳費項目<span id="itemCount" class="item-count"></span></h2>
         <div class="bills-header-actions">
-          <div class="quick-month-switch" aria-label="快速切換月份">
-            <button class="month-arrow-btn" id="prevMonthQuick" type="button" aria-label="上個月">‹</button>
-            <span class="quick-month-label" id="quickMonthLabel">8月</span>
-            <button class="month-arrow-btn" id="nextMonthQuick" type="button" aria-label="下個月">›</button>
-          </div>
+
           <button class="copy-next-btn" id="copyNextMonthBtn" type="button">複製下月</button>
           <button class="edit-toggle" id="editModeBtn">編輯</button>
         </div>
