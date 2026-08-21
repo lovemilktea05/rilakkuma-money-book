@@ -977,9 +977,12 @@
   }
 
   .item-count{
+    display:block;
+    margin-top:4px;
     color:var(--muted);
     font-size:14px;
     font-weight:700;
+    white-space:nowrap;
   }
 
   .edit-toggle{
@@ -2020,7 +2023,7 @@
 
     <section class="card bills-card">
       <div class="section-head">
-        <h2 class="section-title">本月繳費項目 <span id="itemCount" class="item-count"></span></h2>
+        <h2 class="section-title">本月繳費項目<span id="itemCount" class="item-count"></span></h2>
         <div class="bills-header-actions">
           <div class="quick-month-switch" aria-label="快速切換月份">
             <button class="month-arrow-btn" id="prevMonthQuick" type="button" aria-label="上個月">‹</button>
