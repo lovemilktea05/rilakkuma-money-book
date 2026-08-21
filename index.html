@@ -3145,6 +3145,44 @@ body.income-savings-mode .app-shell > :not(#monthlyHero):not(#incomeSavingsPage)
   width:34px;height:34px;border:0;border-radius:50%;background:#f7e8da;color:#9b5e49;
   font:900 21px/1 inherit;cursor:pointer;
 }
+
+/* ===== 收入：固定收入＋常用收入 ===== */
+.finance-income-tools{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;
+}
+.finance-income-tool-btn{
+  border:1px solid #e5c9a3;border-radius:15px;background:#fff8eb;color:#765137;
+  padding:11px 10px;font:900 14px inherit;cursor:pointer;
+}
+.finance-income-tool-btn:active{transform:translateY(1px)}
+.finance-tool-note{margin:10px 2px 0;color:#9b806c;font-size:12px;line-height:1.55}
+.finance-tool-list{display:grid;gap:9px;max-height:42vh;overflow:auto;margin-top:12px}
+.finance-tool-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:11px 12px;border:1px solid #ead8c0;border-radius:15px;background:#fffdf8;
+}
+.finance-tool-main{min-width:0}
+.finance-tool-name{font-weight:900;overflow-wrap:anywhere}
+.finance-tool-meta{margin-top:3px;color:#9b806c;font-size:12px}
+.finance-tool-actions{display:flex;gap:6px;align-items:center}
+.finance-tool-action{
+  border:0;border-radius:11px;padding:8px 10px;background:#a76f42;color:white;
+  font:900 13px inherit;white-space:nowrap;cursor:pointer;
+}
+.finance-tool-delete{background:#f7e8da;color:#9b5e49}
+.finance-dialog-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}
+.finance-dialog-form input{
+  min-width:0;border:1px solid #e5c9a3;border-radius:14px;background:white;color:#60412b;
+  padding:11px 12px;font:700 15px inherit;outline:none;
+}
+.finance-dialog-form button{grid-column:1/-1;border:0;border-radius:14px;padding:11px;background:#a76f42;color:white;font:900 14px inherit}
+.finance-fixed-badge{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:#f4e2c8;color:#8a5d3b;font-size:11px;font-weight:900;vertical-align:1px}
+@media (max-width:390px){
+  .finance-income-tools{grid-template-columns:1fr 1fr}
+  .finance-income-tool-btn{font-size:13px;padding:10px 7px}
+  .finance-tool-row{grid-template-columns:1fr}
+  .finance-tool-actions{justify-content:flex-end}
+}
 .bottom-nav-btn span{line-height:1.15;text-align:center}
 @media (max-width:700px){
   .income-page-header{align-items:flex-start;flex-direction:column}
@@ -3446,6 +3484,11 @@ body.income-savings-mode .income-savings-page{
             <input id="incomeRecordAmount" type="number" min="0" step="1" inputmode="numeric" placeholder="金額" aria-label="收入金額" required>
             <button type="submit">加入收入</button>
           </form>
+          <div class="finance-income-tools">
+            <button type="button" class="finance-income-tool-btn" id="fixedIncomeBtn">📌 固定收入</button>
+            <button type="button" class="finance-income-tool-btn" id="commonIncomeBtn">⭐ 常用收入</button>
+          </div>
+          <div class="finance-tool-note">固定收入會從設定月份開始，每個月自動加入；常用收入則可以需要時一鍵加入本月。</div>
         </section>
         <section class="finance-panel">
           <h2>新增儲蓄</h2>
@@ -3467,6 +3510,38 @@ body.income-savings-mode .income-savings-page{
       </section>
     </div>
   </section>
+
+  <dialog id="fixedIncomeDialog">
+    <div class="dialog-body">
+      <h2>📌 固定收入</h2>
+      <div class="import-help">設定後會從目前月份開始，每個月自動加入。適合薪資、固定津貼等收入。</div>
+      <form id="fixedIncomeForm" class="finance-dialog-form">
+        <input id="fixedIncomeName" maxlength="30" placeholder="例如：薪資" aria-label="固定收入名稱" required>
+        <input id="fixedIncomeAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="預設金額" aria-label="固定收入金額" required>
+        <button type="submit">＋ 新增固定收入</button>
+      </form>
+      <div id="fixedIncomeList" class="finance-tool-list"></div>
+      <div class="dialog-actions">
+        <button class="btn btn-primary" type="button" id="closeFixedIncome">完成</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="commonIncomeDialog">
+    <div class="dialog-body">
+      <h2>⭐ 常用收入</h2>
+      <div class="import-help">把常用的收入先存起來，需要時按「加入本月」即可。</div>
+      <form id="commonIncomeForm" class="finance-dialog-form">
+        <input id="commonIncomeName" maxlength="30" placeholder="例如：打工薪資" aria-label="常用收入名稱" required>
+        <input id="commonIncomeAmount" type="number" min="1" step="1" inputmode="numeric" placeholder="金額" aria-label="常用收入金額" required>
+        <button type="submit">＋ 新增常用收入</button>
+      </form>
+      <div id="commonIncomeList" class="finance-tool-list"></div>
+      <div class="dialog-actions">
+        <button class="btn btn-primary" type="button" id="closeCommonIncome">完成</button>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="financeAnnualDialog" class="finance-annual-dialog">
     <div class="finance-annual-panel">
@@ -5348,6 +5423,114 @@ document.getElementById('backupFileInput').addEventListener('change', async (e) 
 
 const INCOME_SAVINGS_KEY = 'bear-money-book-income-savings-v1';
 
+const FIXED_INCOME_KEY = 'bear-money-book-fixed-income-v1';
+const COMMON_INCOME_KEY = 'bear-money-book-common-income-v1';
+
+function loadFinanceTemplates(key){
+  try{
+    const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(err){
+    return [];
+  }
+}
+
+function saveFinanceTemplates(key, list){
+  localStorage.setItem(key, JSON.stringify(Array.isArray(list) ? list : []));
+}
+
+function monthKeyValue(year, month){
+  return Number(year) * 100 + Number(month);
+}
+
+function ensureFixedIncomeForCurrentMonth(){
+  const fixed = loadFinanceTemplates(FIXED_INCOME_KEY).filter(item => item && item.active !== false);
+  if(!fixed.length) return;
+  const data = loadIncomeSavingsData();
+  const bucket = currentIncomeSavingsBucket(data);
+  const currentKeyValue = monthKeyValue(current.year, current.month);
+  let changed = false;
+  fixed.forEach(template => {
+    const startValue = Number(template.startValue || 0);
+    if(startValue && currentKeyValue < startValue) return;
+    const exists = bucket.income.some(record => record.fixedIncomeId === template.id);
+    if(exists) return;
+    bucket.income.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+      name: String(template.name || '').trim(),
+      amount: financeAmount(template.amount),
+      fixedIncomeId: template.id,
+      createdAt: new Date().toISOString()
+    });
+    changed = true;
+  });
+  if(changed) saveIncomeSavingsData(data);
+}
+
+function renderFixedIncomeList(){
+  const wrap = document.getElementById('fixedIncomeList');
+  if(!wrap) return;
+  wrap.replaceChildren();
+  const list = loadFinanceTemplates(FIXED_INCOME_KEY);
+  if(!list.length){
+    const empty = document.createElement('div');
+    empty.className = 'finance-record-empty';
+    empty.textContent = '還沒有固定收入';
+    wrap.appendChild(empty);
+    return;
+  }
+  list.forEach(item => {
+    const row = document.createElement('div'); row.className='finance-tool-row';
+    const main = document.createElement('div'); main.className='finance-tool-main';
+    const name = document.createElement('div'); name.className='finance-tool-name'; name.textContent=item.name;
+    const meta = document.createElement('div'); meta.className='finance-tool-meta';
+    const sy = Math.floor(Number(item.startValue || 0)/100), sm = Number(item.startValue || 0)%100;
+    meta.textContent = `${money(financeAmount(item.amount))}・${sy && sm ? `從 ${sy} 年 ${sm} 月起` : '每月自動加入'}`;
+    main.append(name,meta);
+    const actions=document.createElement('div'); actions.className='finance-tool-actions';
+    const toggle=document.createElement('button'); toggle.type='button'; toggle.className='finance-tool-action';
+    toggle.textContent=item.active === false ? '啟用' : '暫停';
+    toggle.addEventListener('click',()=>{
+      const now=loadFinanceTemplates(FIXED_INCOME_KEY); const target=now.find(x=>x.id===item.id);
+      if(target) target.active = target.active === false;
+      saveFinanceTemplates(FIXED_INCOME_KEY,now); renderFixedIncomeList();
+    });
+    const del=document.createElement('button'); del.type='button'; del.className='finance-tool-action finance-tool-delete'; del.textContent='刪除';
+    del.addEventListener('click',()=>{
+      if(!confirm(`刪除固定收入「${item.name}」嗎？已經加入各月份的紀錄不會被刪除。`)) return;
+      saveFinanceTemplates(FIXED_INCOME_KEY, loadFinanceTemplates(FIXED_INCOME_KEY).filter(x=>x.id!==item.id));
+      renderFixedIncomeList();
+    });
+    actions.append(toggle,del); row.append(main,actions); wrap.appendChild(row);
+  });
+}
+
+function renderCommonIncomeList(){
+  const wrap = document.getElementById('commonIncomeList');
+  if(!wrap) return;
+  wrap.replaceChildren();
+  const list = loadFinanceTemplates(COMMON_INCOME_KEY);
+  if(!list.length){
+    const empty=document.createElement('div'); empty.className='finance-record-empty'; empty.textContent='還沒有常用收入'; wrap.appendChild(empty); return;
+  }
+  list.forEach(item=>{
+    const row=document.createElement('div'); row.className='finance-tool-row';
+    const main=document.createElement('div'); main.className='finance-tool-main';
+    const name=document.createElement('div'); name.className='finance-tool-name'; name.textContent=item.name;
+    const meta=document.createElement('div'); meta.className='finance-tool-meta'; meta.textContent=money(financeAmount(item.amount));
+    main.append(name,meta);
+    const actions=document.createElement('div'); actions.className='finance-tool-actions';
+    const add=document.createElement('button'); add.type='button'; add.className='finance-tool-action'; add.textContent='加入本月';
+    add.addEventListener('click',()=>{ addIncomeSavingsRecord('income',item.name,item.amount); });
+    const del=document.createElement('button'); del.type='button'; del.className='finance-tool-action finance-tool-delete'; del.textContent='刪除';
+    del.addEventListener('click',()=>{
+      if(!confirm(`刪除常用收入「${item.name}」嗎？`)) return;
+      saveFinanceTemplates(COMMON_INCOME_KEY, loadFinanceTemplates(COMMON_INCOME_KEY).filter(x=>x.id!==item.id)); renderCommonIncomeList();
+    });
+    actions.append(add,del); row.append(main,actions); wrap.appendChild(row);
+  });
+}
+
 function loadIncomeSavingsData(){
   try{
     const parsed = JSON.parse(localStorage.getItem(INCOME_SAVINGS_KEY) || '{}');
@@ -5411,6 +5594,12 @@ function renderFinanceRecords(containerId, type, records){
     const name = document.createElement('div');
     name.className = 'finance-record-name';
     name.textContent = record.name;
+    if(record.fixedIncomeId){
+      const badge = document.createElement('span');
+      badge.className = 'finance-fixed-badge';
+      badge.textContent = '固定';
+      name.appendChild(badge);
+    }
     const amount = document.createElement('div');
     amount.className = 'finance-record-amount';
     amount.textContent = money(financeAmount(record.amount));
@@ -5428,6 +5617,7 @@ function renderFinanceRecords(containerId, type, records){
 function renderIncomeSavingsPage(){
   const page = document.getElementById('incomeSavingsPage');
   if(!page) return;
+  ensureFixedIncomeForCurrentMonth();
   const data = loadIncomeSavingsData();
   const bucket = currentIncomeSavingsBucket(data);
   const incomeTotal = bucket.income.reduce((sum, record) => sum + financeAmount(record.amount), 0);
@@ -5546,6 +5736,48 @@ document.getElementById('incomeRecordForm').addEventListener('submit', event => 
   addIncomeSavingsRecord('income', name.value, amount.value);
   event.currentTarget.reset();
   name.focus();
+});
+
+document.getElementById('fixedIncomeBtn').addEventListener('click', () => {
+  renderFixedIncomeList();
+  document.getElementById('fixedIncomeDialog').showModal();
+});
+document.getElementById('closeFixedIncome').addEventListener('click', () => document.getElementById('fixedIncomeDialog').close());
+document.getElementById('fixedIncomeForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const name=document.getElementById('fixedIncomeName');
+  const amount=document.getElementById('fixedIncomeAmount');
+  const value=financeAmount(amount.value);
+  if(!name.value.trim() || value <= 0) return;
+  const list=loadFinanceTemplates(FIXED_INCOME_KEY);
+  list.push({
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+    name:name.value.trim(), amount:value, active:true,
+    startValue:monthKeyValue(current.year,current.month), createdAt:new Date().toISOString()
+  });
+  saveFinanceTemplates(FIXED_INCOME_KEY,list);
+  event.currentTarget.reset();
+  ensureFixedIncomeForCurrentMonth();
+  renderFixedIncomeList();
+  renderIncomeSavingsPage();
+});
+
+document.getElementById('commonIncomeBtn').addEventListener('click', () => {
+  renderCommonIncomeList();
+  document.getElementById('commonIncomeDialog').showModal();
+});
+document.getElementById('closeCommonIncome').addEventListener('click', () => document.getElementById('commonIncomeDialog').close());
+document.getElementById('commonIncomeForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const name=document.getElementById('commonIncomeName');
+  const amount=document.getElementById('commonIncomeAmount');
+  const value=financeAmount(amount.value);
+  if(!name.value.trim() || value <= 0) return;
+  const list=loadFinanceTemplates(COMMON_INCOME_KEY);
+  list.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:name.value.trim(),amount:value,createdAt:new Date().toISOString()});
+  saveFinanceTemplates(COMMON_INCOME_KEY,list);
+  event.currentTarget.reset();
+  renderCommonIncomeList();
 });
 
 document.getElementById('savingsRecordForm').addEventListener('submit', event => {
