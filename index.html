@@ -2963,6 +2963,71 @@
   .bill-item-reorderable{
     -webkit-touch-callout:none;
   }
+
+  /* 月份文字本身可點選 1～12 月，左右箭頭維持原功能 */
+  .quick-month-select{
+    display:block;
+    width:auto;
+    min-width:48px;
+    height:40px;
+    padding:0 2px;
+    border:0;
+    border-radius:8px;
+    outline:0;
+    background:transparent;
+    color:#5b402c;
+    text-align:center;
+    text-align-last:center;
+    cursor:pointer;
+    appearance:none;
+    -webkit-appearance:none;
+  }
+
+  .quick-month-select:focus{
+    background:rgba(245,226,194,.48);
+  }
+
+  /* 年度視窗手機版固定關閉鍵與可捲動內容 */
+  #yearViewDialog[open]{
+    position:fixed !important;
+    top:max(8px, env(safe-area-inset-top)) !important;
+    bottom:auto !important;
+    margin:0 auto !important;
+    max-height:calc(100dvh - max(16px, env(safe-area-inset-top))) !important;
+    overflow:hidden !important;
+  }
+
+  #yearViewDialog .year-view-dialog-body{
+    box-sizing:border-box;
+    max-height:calc(100dvh - max(16px, env(safe-area-inset-top))) !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    padding-top:22px;
+  }
+
+  #yearViewDialog .year-view-close{
+    position:fixed !important;
+    top:max(16px, calc(env(safe-area-inset-top) + 8px)) !important;
+    right:max(16px, calc(env(safe-area-inset-right) + 8px)) !important;
+    z-index:10000 !important;
+    box-shadow:0 4px 12px rgba(92,61,36,.18);
+  }
+
+  @media (max-width:620px){
+    #yearViewDialog[open]{
+      width:calc(100vw - 18px) !important;
+      border-radius:18px !important;
+    }
+
+    #yearViewDialog .year-view-dialog-body{
+      padding:18px 16px 24px !important;
+    }
+
+    #yearViewDialog .year-view-dialog-body h2{
+      padding-right:50px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -3018,7 +3083,20 @@
           </select>
           <div class="quick-month-switch inline-top-month-switch" aria-label="快速切換月份">
             <button class="month-arrow-btn" id="prevMonthQuick" type="button" aria-label="上個月">‹</button>
-            <span class="quick-month-label" id="quickMonthLabel">8月</span>
+            <select class="quick-month-label quick-month-select" id="quickMonthLabel" aria-label="直接選擇月份">
+              <option value="1">1月</option>
+              <option value="2">2月</option>
+              <option value="3">3月</option>
+              <option value="4">4月</option>
+              <option value="5">5月</option>
+              <option value="6">6月</option>
+              <option value="7">7月</option>
+              <option value="8" selected>8月</option>
+              <option value="9">9月</option>
+              <option value="10">10月</option>
+              <option value="11">11月</option>
+              <option value="12">12月</option>
+            </select>
             <button class="month-arrow-btn" id="nextMonthQuick" type="button" aria-label="下個月">›</button>
           </div>
           <button class="inline-year-view-btn" id="inlineYearViewBtn" type="button">檢視年度</button>
@@ -3264,7 +3342,7 @@
 <dialog id="yearViewDialog">
   <div class="dialog-body year-view-dialog-body">
     <button class="year-view-close" type="button" id="closeYearView" aria-label="關閉年度檢視" title="關閉">×</button>
-    <h2 id="yearViewTitle">📊 整年度</h2>
+    <h2 id="yearViewTitle">整年度</h2>
     <div id="yearViewSummary" class="import-summary"></div>
     <div id="yearViewList" class="preview-list"></div>
   </div>
@@ -3902,7 +3980,7 @@ function renderMonthTitle(){
 
   if(inlineYear) inlineYear.value = String(current.year);
   if(inlineMonth) inlineMonth.value = String(current.month);
-  if(quickMonthLabel) quickMonthLabel.textContent = `${current.month}月`;
+  if(quickMonthLabel) quickMonthLabel.value = String(current.month);
 
   applyMonthlyBackground(current.month);
 }
@@ -4519,7 +4597,7 @@ function renderYearView(year){
   const list = document.getElementById('yearViewList');
   const summary = document.getElementById('yearViewSummary');
 
-  document.getElementById('yearViewTitle').textContent = `📊 ${year} 年整年度`;
+  document.getElementById('yearViewTitle').textContent = `${year} 年整年度`;
   list.innerHTML = '';
   list.className = 'year-overview';
 
@@ -4542,7 +4620,7 @@ function renderYearView(year){
     card.className = 'year-month-card';
     card.innerHTML = `
       <div class="year-month-top">
-        <span>🌼 ${month} 月</span>
+        <span>${month} 月</span>
         <span>${items.length} 筆 ›</span>
       </div>
       <div class="year-month-stats">
@@ -4574,6 +4652,12 @@ function renderYearView(year){
 document.getElementById('inlineYearViewBtn').addEventListener('click', () => {
   renderYearView(current.year);
   yearViewDialog.showModal();
+  /* 年度視窗開啟時回到最上方 */
+  window.requestAnimationFrame(() => {
+    yearViewDialog.scrollTop = 0;
+    const body = yearViewDialog.querySelector('.year-view-dialog-body');
+    if(body) body.scrollTop = 0;
+  });
 });
 
 document.getElementById('closeYearView').addEventListener('click', () => {
@@ -4646,6 +4730,15 @@ function setEditMode(on){
 }
 
 
+
+/* 點中間月份可直接選擇 1～12 月 */
+document.getElementById('quickMonthLabel').addEventListener('change', event => {
+  const selectedMonth = Number(event.target.value);
+  if(selectedMonth >= 1 && selectedMonth <= 12){
+    current.month = selectedMonth;
+    render();
+  }
+});
 document.getElementById('prevMonthQuick').addEventListener('click', () => {
   current.month -= 1;
   if(current.month < 1){
