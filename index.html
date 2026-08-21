@@ -3075,7 +3075,7 @@
   }
 
 /* 繳費／收入及儲蓄雙頁切換 */
-body.income-savings-mode .app-shell > :not(#monthlyHero):not(#incomeSavingsPage):not(#financeAnnualDialog):not(.bottom-nav){
+body.income-savings-mode .app-shell > :not(#monthlyHero):not(#incomeSavingsPage):not(#financeAnnualDialog):not(#fixedIncomeDialog):not(#commonIncomeDialog):not(.bottom-nav){
   display:none !important;
 }
 .income-savings-page[hidden]{display:none !important}
@@ -3136,7 +3136,7 @@ body.income-savings-mode .app-shell > :not(#monthlyHero):not(#incomeSavingsPage)
 .finance-record-list{display:grid;gap:9px}
 .finance-record-empty{padding:18px;text-align:center;color:#a38a76;background:#fffaf2;border-radius:17px}
 .finance-record{
-  display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:8px;
   padding:12px 14px;background:#fffaf1;border:1px solid #f0dfc7;border-radius:17px;
 }
 .finance-record-name{font-weight:900;overflow-wrap:anywhere}
@@ -3144,6 +3144,18 @@ body.income-savings-mode .app-shell > :not(#monthlyHero):not(#incomeSavingsPage)
 .finance-record-delete{
   width:34px;height:34px;border:0;border-radius:50%;background:#f7e8da;color:#9b5e49;
   font:900 21px/1 inherit;cursor:pointer;
+}
+
+.finance-record-edit{
+  border:1px solid #e5c9a3;border-radius:11px;background:#fff8eb;color:#765137;
+  padding:7px 9px;font:900 13px inherit;cursor:pointer;white-space:nowrap;
+}
+.finance-record-edit:active{transform:translateY(1px)}
+@media (max-width:390px){
+  .finance-record{grid-template-columns:minmax(0,1fr) auto auto;gap:7px}
+  .finance-record-amount{grid-column:2;grid-row:1}
+  .finance-record-edit{grid-column:2;grid-row:2;justify-self:end}
+  .finance-record-delete{grid-column:3;grid-row:1 / span 2}
 }
 
 /* ===== 收入：固定收入＋常用收入 ===== */
@@ -5578,6 +5590,35 @@ function deleteIncomeSavingsRecord(type, id){
   renderIncomeSavingsPage();
 }
 
+function editIncomeSavingsRecord(type, id){
+  const data = loadIncomeSavingsData();
+  const bucket = currentIncomeSavingsBucket(data);
+  const record = bucket[type].find(item => item.id === id);
+  if(!record) return;
+
+  const newName = prompt(type === 'income' ? '修改收入名稱' : '修改儲蓄名稱', record.name || '');
+  if(newName === null) return;
+  const cleanName = String(newName).trim();
+  if(!cleanName){
+    alert('名稱不能空白');
+    return;
+  }
+
+  const newAmount = prompt(type === 'income' ? '修改收入金額' : '修改儲蓄金額', String(financeAmount(record.amount)));
+  if(newAmount === null) return;
+  const cleanAmount = financeAmount(newAmount);
+  if(cleanAmount <= 0){
+    alert('金額請輸入大於 0 的數字');
+    return;
+  }
+
+  record.name = cleanName;
+  record.amount = cleanAmount;
+  record.updatedAt = new Date().toISOString();
+  saveIncomeSavingsData(data);
+  renderIncomeSavingsPage();
+}
+
 function renderFinanceRecords(containerId, type, records){
   const container = document.getElementById(containerId);
   container.replaceChildren();
@@ -5603,13 +5644,19 @@ function renderFinanceRecords(containerId, type, records){
     const amount = document.createElement('div');
     amount.className = 'finance-record-amount';
     amount.textContent = money(financeAmount(record.amount));
+    const edit = document.createElement('button');
+    edit.className = 'finance-record-edit';
+    edit.type = 'button';
+    edit.textContent = '編輯';
+    edit.setAttribute('aria-label', `編輯${record.name}`);
+    edit.addEventListener('click', () => editIncomeSavingsRecord(type, record.id));
     const remove = document.createElement('button');
     remove.className = 'finance-record-delete';
     remove.type = 'button';
     remove.setAttribute('aria-label', `刪除${record.name}`);
     remove.textContent = '×';
     remove.addEventListener('click', () => deleteIncomeSavingsRecord(type, record.id));
-    row.append(name, amount, remove);
+    row.append(name, amount, edit, remove);
     container.appendChild(row);
   });
 }
