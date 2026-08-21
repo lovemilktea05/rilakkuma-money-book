@@ -1711,6 +1711,19 @@
     width:100%;
   }
 
+
+  /* ===== 設定：備份 / 匯出 / 匯入 ===== */
+  .settings-actions{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:9px !important;
+    margin:14px 0 !important;
+  }
+
+  .settings-actions .btn{
+    width:100% !important;
+  }
+
 </style>
 </head>
 <body>
@@ -1849,6 +1862,9 @@
     
     <div class="settings-actions">
       <button class="btn btn-primary" type="button" id="settingsQuickBackup">立即備份</button>
+      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔</button>
+      <button class="btn btn-secondary" type="button" id="importBackupBtn">匯入備份檔</button>
+      <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
     </div>
 <div class="dialog-actions">
       <button class="btn btn-secondary" type="button" id="closeSettings">關閉</button>
@@ -1886,9 +1902,6 @@
 
     <div class="backup-actions">
       <button class="btn btn-primary" type="button" id="manualBackupBtn">立即備份</button>
-      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔</button>
-      <button class="btn btn-secondary" type="button" id="importBackupBtn">匯入備份檔</button>
-      <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
     </div>
 
     <div class="backup-note">
