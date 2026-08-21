@@ -823,21 +823,23 @@
   }
 
   .hero::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:
-      linear-gradient(90deg, rgba(255,249,235,.96) 0%, rgba(255,249,235,.72) 34%, rgba(255,249,235,.08) 58%, rgba(255,249,235,0) 72%),
-      linear-gradient(0deg, rgba(255,248,233,.68) 0%, transparent 20%);
-    pointer-events:none;
+    content:none;
   }
 
   .hero-copy{
     position:relative;
     z-index:1;
-    max-width:260px;
-    padding-top:12px;
-    text-shadow:0 1px 0 rgba(255,255,255,.9);
+    display:inline-flex;
+    align-items:center;
+    width:fit-content;
+    max-width:calc(100% - 24px);
+    padding:12px 18px;
+    border-radius:18px;
+    background:rgba(255,249,235,.62);
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+    box-shadow:0 4px 14px rgba(96,68,46,.08);
+    text-shadow:0 1px 0 rgba(255,255,255,.95);
   }
 
   .hero-title{
@@ -1608,8 +1610,13 @@
     background:transparent !important;
     padding:0 !important;
     margin:0 !important;
-    color:inherit !important;
-    font:inherit !important;
+    color:#60442e !important;
+    font-family:inherit !important;
+    font-size:clamp(36px, 6vw, 46px) !important;
+    font-weight:900 !important;
+    line-height:1.2 !important;
+    letter-spacing:.06em !important;
+    white-space:nowrap;
     text-align:left !important;
     cursor:pointer;
   }
@@ -1953,8 +1960,7 @@
 <div class="app-shell">
   <header class="hero" id="monthlyHero">
     <div class="hero-copy">
-      <div class="title-row"><button class="hero-title hero-title-editable" id="bookTitle" type="button" aria-label="修改記帳本名稱">拉拉熊記帳本</button></div>
-      <div class="hero-subtitle">用心記錄每一筆，<br>讓生活更安心 ♡</div>
+      <div class="title-row"><button class="hero-title hero-title-editable" id="bookTitle" type="button" aria-label="修改記帳本名稱">花錢如流水</button></div>
     </div>
   </header>
 
@@ -2557,7 +2563,7 @@ const BACKUP_HISTORY_LIMIT = 12;
 const FIXED_KEY = 'bear-money-book-fixed-v1';
 const TITLE_KEY = 'bear-money-book-title-v1';
 
-function loadBookTitle(){ return localStorage.getItem(TITLE_KEY) || '拉拉熊記帳本'; }
+function loadBookTitle(){ return localStorage.getItem(TITLE_KEY) || '花錢如流水'; }
 function renderBookTitle(){ const el=document.getElementById('bookTitle'); if(el) el.textContent=loadBookTitle(); document.title=loadBookTitle(); }
 
 let current = { year: 2026, month: 8 };
