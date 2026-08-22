@@ -3538,6 +3538,35 @@ body.income-savings-mode .finance-concept-summary .summary-box:not(:first-child)
   }
 }
 </style>
+
+<style id="income-spacing-font-fix-20260822">
+/* 收入／儲蓄頁：年月卡靠近上方拉拉熊；摘要只放大字體，不改四格間距 */
+body.income-savings-mode .income-savings-page{
+  padding-top:2px !important;
+}
+body.income-savings-mode .finance-concept-summary .summary-label{
+  font-size:18px !important;
+}
+body.income-savings-mode .finance-concept-summary .amount,
+body.income-savings-mode .finance-concept-summary .summary-box:first-child .amount,
+body.income-savings-mode .finance-concept-summary .summary-box:not(:first-child) .amount{
+  font-size:28px !important;
+}
+@media(max-width:390px){
+  body.income-savings-mode .income-savings-page{
+    padding-top:2px !important;
+  }
+  body.income-savings-mode .finance-concept-summary .summary-label{
+    font-size:17px !important;
+  }
+  body.income-savings-mode .finance-concept-summary .amount,
+  body.income-savings-mode .finance-concept-summary .summary-box:first-child .amount,
+  body.income-savings-mode .finance-concept-summary .summary-box:not(:first-child) .amount{
+    font-size:26px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app-shell">
