@@ -3492,6 +3492,52 @@ body.income-savings-mode .income-savings-page{
   .finance-income-tools-only{gap:10px !important;}
 }
 </style>
+
+<style id="income-match-bills-final-20260822">
+/* 收入／儲蓄頁：上方封面完全沿用繳費頁排版 */
+body.income-savings-mode #monthlyHero{
+  display:flex !important;
+}
+body.income-savings-mode #monthlyHero .concept-hero-copy{
+  display:block !important;
+}
+body.income-savings-mode #monthlyHero .concept-hero-subtitle{
+  white-space:nowrap !important;
+}
+
+/* 收入／儲蓄摘要：上下兩列間距比照繳費頁右側「已繳／待繳」 */
+body.income-savings-mode .finance-concept-summary{
+  min-height:0 !important;
+  height:auto !important;
+  grid-template-rows:56px 56px !important;
+  padding:0 !important;
+  align-items:stretch !important;
+}
+body.income-savings-mode .finance-concept-summary .summary-box,
+body.income-savings-mode .finance-concept-summary .summary-box:first-child,
+body.income-savings-mode .finance-concept-summary .summary-box:nth-child(2),
+body.income-savings-mode .finance-concept-summary .summary-box:nth-child(3),
+body.income-savings-mode .finance-concept-summary .summary-box:nth-child(4){
+  min-height:0 !important;
+  padding:4px 6px !important;
+  justify-content:center !important;
+}
+body.income-savings-mode .finance-concept-summary .summary-label{
+  margin:0 !important;
+  line-height:1.15 !important;
+}
+body.income-savings-mode .finance-concept-summary .amount,
+body.income-savings-mode .finance-concept-summary .summary-box:first-child .amount,
+body.income-savings-mode .finance-concept-summary .summary-box:not(:first-child) .amount{
+  margin-top:3px !important;
+  line-height:1 !important;
+}
+@media(max-width:390px){
+  body.income-savings-mode .finance-concept-summary{
+    grid-template-rows:54px 54px !important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="app-shell">
