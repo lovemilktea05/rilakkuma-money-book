@@ -4427,13 +4427,16 @@ function ensureFixedForCurrentMonth(){
 
 function makeSnapshot(reason){
   return {
-    version:2,
+    version:3,
     reason:reason || '備份',
     time:new Date().toISOString(),
     title:loadBookTitle(),
     months:loadAllMonths(),
     favorites:loadFavorites(),
-    fixed:loadFixed()
+    fixed:loadFixed(),
+    incomeSavings:loadIncomeSavingsData(),
+    incomeTemplates:loadFinanceTemplates(FIXED_INCOME_KEY),
+    savingsTemplates:loadFinanceTemplates(COMMON_INCOME_KEY)
   };
 }
 
@@ -4459,7 +4462,10 @@ function snapshotDataSignature(snapshot){
       title:snapshot.title || '',
       months:snapshot.months || {},
       favorites:snapshot.favorites || [],
-      fixed:snapshot.fixed || []
+      fixed:snapshot.fixed || [],
+      incomeSavings:snapshot.incomeSavings || {},
+      incomeTemplates:snapshot.incomeTemplates || [],
+      savingsTemplates:snapshot.savingsTemplates || []
     });
   }catch(e){
     return '';
@@ -4507,12 +4513,18 @@ function applySnapshot(backup){
   localStorage.setItem(MONTHS_KEY, JSON.stringify(backup.months || {}));
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(backup.favorites || []));
   localStorage.setItem(FIXED_KEY, JSON.stringify(backup.fixed || []));
+  localStorage.setItem(INCOME_SAVINGS_KEY, JSON.stringify(backup.incomeSavings || {}));
+  localStorage.setItem(FIXED_INCOME_KEY, JSON.stringify(backup.incomeTemplates || []));
+  localStorage.setItem(COMMON_INCOME_KEY, JSON.stringify(backup.savingsTemplates || []));
   if(typeof backup.title === 'string' && backup.title.trim()){
     localStorage.setItem(TITLE_KEY, backup.title.trim());
   }
 
   renderBookTitle();
   render();
+  renderIncomeSavingsPage();
+  renderFixedIncomeList();
+  renderCommonIncomeList();
   return true;
 }
 
@@ -5757,6 +5769,7 @@ function loadFinanceTemplates(key){
 
 function saveFinanceTemplates(key, list){
   localStorage.setItem(key, JSON.stringify(Array.isArray(list) ? list : []));
+  if(typeof scheduleAutoBackup === 'function') scheduleAutoBackup();
 }
 
 function monthKeyValue(year, month){
@@ -5812,6 +5825,7 @@ function loadIncomeSavingsData(){
 
 function saveIncomeSavingsData(data){
   localStorage.setItem(INCOME_SAVINGS_KEY, JSON.stringify(data));
+  if(typeof scheduleAutoBackup === 'function') scheduleAutoBackup();
 }
 
 function currentIncomeSavingsBucket(data){
