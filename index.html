@@ -3567,6 +3567,21 @@ body.income-savings-mode .finance-concept-summary .summary-box:not(:first-child)
 }
 </style>
 
+
+<style id="income-card-overlap-fix-20260822">
+/* 收入／儲蓄頁：年月卡再往上貼近拉拉熊，覆蓋上方分隔線 */
+body.income-savings-mode .finance-month-summary-card{
+  position:relative !important;
+  z-index:12 !important;
+  margin-top:-28px !important;
+}
+@media(max-width:390px){
+  body.income-savings-mode .finance-month-summary-card{
+    margin-top:-30px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app-shell">
