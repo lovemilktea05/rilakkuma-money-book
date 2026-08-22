@@ -4579,7 +4579,7 @@ async function exportBackupFile(){
 
   const jsonText = JSON.stringify(payload, null, 2);
   const stamp = new Date().toISOString().slice(0,10);
-  const fileName = `記帳本備份-${stamp}.json`;
+  const fileName = '記帳本備份.json';
   const file = new File(
     [jsonText],
     fileName,
