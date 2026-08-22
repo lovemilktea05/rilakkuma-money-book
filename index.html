@@ -4330,6 +4330,8 @@ const BACKUP_HISTORY_KEY = 'bear-money-book-backup-history-v2';
 const BACKUP_HISTORY_LIMIT = 12;
 const FIXED_KEY = 'bear-money-book-fixed-v1';
 const TITLE_KEY = 'bear-money-book-title-v1';
+const LAST_MAIN_PAGE_KEY = 'bear-money-book-last-main-page-v1';
+const LAST_VIEW_KEY = 'bear-money-book-last-view-v1';
 
 function loadBookTitle(){ const saved=localStorage.getItem(TITLE_KEY); return (!saved || saved==='花錢如流水') ? '拉拉熊記帳本' : saved; }
 function renderBookTitle(){ const el=document.getElementById('bookTitle'); if(el) el.textContent=loadBookTitle(); document.title=loadBookTitle(); }
@@ -5983,7 +5985,7 @@ function renderIncomeSavingsPage(){
   renderFinanceRecords('savingsRecordList', 'savings', bucket.savings);
 }
 
-function showMainPage(pageName){
+function showMainPage(pageName, options = {}){
   const showIncomeSavings = pageName === 'incomeSavings';
   const page = document.getElementById('incomeSavingsPage');
   document.body.classList.toggle('income-savings-mode', showIncomeSavings);
@@ -5991,7 +5993,15 @@ function showMainPage(pageName){
   document.getElementById('navHome').classList.toggle('active', !showIncomeSavings);
   document.getElementById('navSavings').classList.toggle('active', showIncomeSavings);
   if(showIncomeSavings) renderIncomeSavingsPage();
-  window.scrollTo({top:0, behavior:'smooth'});
+
+  if(options.remember !== false){
+    localStorage.setItem(LAST_MAIN_PAGE_KEY, showIncomeSavings ? 'incomeSavings' : 'payment');
+    localStorage.setItem(LAST_VIEW_KEY, showIncomeSavings ? 'incomeSavings' : 'payment');
+  }
+
+  if(options.scroll !== false){
+    window.scrollTo({top:0, behavior: options.instant ? 'auto' : 'smooth'});
+  }
 }
 
 document.getElementById('navHome').addEventListener('click', () => {
@@ -6127,21 +6137,13 @@ document.getElementById('savingsRecordForm').addEventListener('submit', event =>
 
 const settingsDialog = document.getElementById('settingsDialog');
 document.getElementById('moreBtn').addEventListener('click', () => {
+  localStorage.setItem(LAST_VIEW_KEY, 'settings');
   settingsDialog.showModal();
 });
 document.getElementById('closeSettings').addEventListener('click', () => {
   settingsDialog.close();
-});
-
-
-
-
-document.getElementById('settingsClearMonth').addEventListener('click', () => {
-  clearCurrentMonth();
-});
-
-document.getElementById('settingsClearYear').addEventListener('click', () => {
-  clearCurrentYear();
+  const lastMainPage = localStorage.getItem(LAST_MAIN_PAGE_KEY) === 'incomeSavings' ? 'incomeSavings' : 'payment';
+  localStorage.setItem(LAST_VIEW_KEY, lastMainPage);
 });
 
 document.getElementById('settingsQuickBackup').addEventListener('click', () => {
@@ -6177,6 +6179,18 @@ if(loadBackupHistory().length === 0){
   }
 }
 render();
+
+// 重新整理或再次開啟網頁時，回到上一次最後使用的畫面。
+(function restoreLastScreen(){
+  const savedMainPage = localStorage.getItem(LAST_MAIN_PAGE_KEY) === 'incomeSavings' ? 'incomeSavings' : 'payment';
+  const savedView = localStorage.getItem(LAST_VIEW_KEY) || savedMainPage;
+
+  showMainPage(savedMainPage, {remember:false, scroll:false, instant:true});
+
+  if(savedView === 'settings' && settingsDialog && !settingsDialog.open){
+    settingsDialog.showModal();
+  }
+})();
 
 const incomeListEditToggle = document.getElementById('incomeListEditToggle');
 if(incomeListEditToggle){
