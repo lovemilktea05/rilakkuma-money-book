@@ -1961,6 +1961,18 @@
     width:100% !important;
   }
 
+  /* ===== 備份與還原：簡化成兩個主要按鈕 ===== */
+  .settings-backup-simple{
+    gap:12px !important;
+  }
+
+  .settings-backup-main-btn{
+    min-height:56px !important;
+    border-radius:16px !important;
+    font-size:17px !important;
+    font-weight:900 !important;
+  }
+
   .danger-settings{
     padding-top:12px !important;
     border-top:1px solid #ead8c0 !important;
@@ -3896,11 +3908,10 @@ body.income-savings-mode .finance-month-summary-card{
   <div class="dialog-body">
     <h2>設定</h2>
 
-    <div class="settings-section">
+    <div class="settings-section settings-backup-simple">
       <div class="settings-section-title">備份與還原</div>
-      <button class="btn btn-primary" type="button" id="settingsQuickBackup">立即備份</button>
-      <button class="btn btn-secondary" type="button" id="exportBackupBtn">匯出備份檔</button>
-      <button class="btn btn-secondary" type="button" id="importBackupBtn">匯入備份檔</button>
+      <button class="btn btn-primary settings-backup-main-btn" type="button" id="settingsQuickBackup">立即備份</button>
+      <button class="btn btn-secondary settings-backup-main-btn" type="button" id="importBackupBtn">還原備份</button>
       <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
     </div>
 
@@ -5730,11 +5741,6 @@ document.getElementById('manualBackupBtn').addEventListener('click', () => {
   alert('已完成備份');
 });
 
-document.getElementById('exportBackupBtn').addEventListener('click', () => {
-  exportBackupFile();
-  renderBackupHistory();
-});
-
 document.getElementById('importBackupBtn').addEventListener('click', () => {
   document.getElementById('backupFileInput').click();
 });
@@ -5747,14 +5753,14 @@ document.getElementById('backupFileInput').addEventListener('change', async (e) 
     const text = await file.text();
     const obj = JSON.parse(text);
 
-    if(!confirm('要匯入這份備份嗎？目前資料會先自動備份。')){
+    if(!confirm('要還原這份備份嗎？目前資料會先自動備份。')){
       e.target.value = '';
       return;
     }
 
     importBackupObject(obj);
     renderBackupHistory();
-    alert('備份檔已匯入');
+    alert('備份已還原');
   }catch(err){
     alert(err && err.message ? err.message : '備份檔讀取失敗');
   }finally{
@@ -6188,7 +6194,9 @@ document.getElementById('closeSettings').addEventListener('click', () => {
 
 document.getElementById('settingsQuickBackup').addEventListener('click', () => {
   createBackup('設定－立即備份', {force:true});
-  alert('已完成備份');
+  exportBackupFile();
+  renderBackupHistory();
+  alert('備份完成，已下載「記帳本備份.json」');
 });
 
 
