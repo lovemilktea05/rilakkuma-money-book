@@ -3586,6 +3586,21 @@ body.income-savings-mode .finance-month-summary-card{
 }
 </style>
 
+
+<style id="bottom-nav-active-fix">
+/* 底部導覽：三個頁面都顯示一致的選中背景色 */
+#navHome.active,
+#navSavings.active,
+#moreBtn.active{
+  background:#fae9bd !important;
+  box-shadow:none !important;
+}
+#navHome:not(.active),
+#navSavings:not(.active),
+#moreBtn:not(.active){
+  background:transparent !important;
+}
+</style>
 </head>
 <body>
 <div class="app-shell">
@@ -6003,13 +6018,18 @@ function renderIncomeSavingsPage(){
   renderFinanceRecords('savingsRecordList', 'savings', bucket.savings);
 }
 
+function setBottomNavActive(viewName){
+  document.getElementById('navHome')?.classList.toggle('active', viewName === 'payment');
+  document.getElementById('navSavings')?.classList.toggle('active', viewName === 'incomeSavings');
+  document.getElementById('moreBtn')?.classList.toggle('active', viewName === 'settings');
+}
+
 function showMainPage(pageName, options = {}){
   const showIncomeSavings = pageName === 'incomeSavings';
   const page = document.getElementById('incomeSavingsPage');
   document.body.classList.toggle('income-savings-mode', showIncomeSavings);
   page.hidden = !showIncomeSavings;
-  document.getElementById('navHome').classList.toggle('active', !showIncomeSavings);
-  document.getElementById('navSavings').classList.toggle('active', showIncomeSavings);
+  setBottomNavActive(showIncomeSavings ? 'incomeSavings' : 'payment');
   if(showIncomeSavings) renderIncomeSavingsPage();
 
   if(options.remember !== false){
@@ -6156,12 +6176,14 @@ document.getElementById('savingsRecordForm').addEventListener('submit', event =>
 const settingsDialog = document.getElementById('settingsDialog');
 document.getElementById('moreBtn').addEventListener('click', () => {
   localStorage.setItem(LAST_VIEW_KEY, 'settings');
+  setBottomNavActive('settings');
   settingsDialog.showModal();
 });
 document.getElementById('closeSettings').addEventListener('click', () => {
   settingsDialog.close();
   const lastMainPage = localStorage.getItem(LAST_MAIN_PAGE_KEY) === 'incomeSavings' ? 'incomeSavings' : 'payment';
   localStorage.setItem(LAST_VIEW_KEY, lastMainPage);
+  setBottomNavActive(lastMainPage);
 });
 
 document.getElementById('settingsQuickBackup').addEventListener('click', () => {
@@ -6206,6 +6228,7 @@ render();
   showMainPage(savedMainPage, {remember:false, scroll:false, instant:true});
 
   if(savedView === 'settings' && settingsDialog && !settingsDialog.open){
+    setBottomNavActive('settings');
     settingsDialog.showModal();
   }
 })();
