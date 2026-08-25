@@ -4593,7 +4593,7 @@ function formatBackupTime(iso){
   }
 }
 
-async function exportBackupFile(){
+function exportBackupFile(){
   const snapshot = makeSnapshot('手動匯出備份');
   createBackup('手動匯出備份', {force:true});
 
@@ -4604,31 +4604,7 @@ async function exportBackupFile(){
   };
 
   const jsonText = JSON.stringify(payload, null, 2);
-  const stamp = new Date().toISOString().slice(0,10);
   const fileName = '記帳本備份.json';
-  const file = new File(
-    [jsonText],
-    fileName,
-    {type:'application/json;charset=utf-8'}
-  );
-
-  try{
-    if(
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({files:[file]})
-    ){
-      await navigator.share({
-        title:'記帳本備份',
-        text:'請選擇「儲存到檔案」，再挑選要保存的位置。',
-        files:[file]
-      });
-      return;
-    }
-  }catch(err){
-    if(err && err.name === 'AbortError') return;
-  }
-
   const blob = new Blob(
     [jsonText],
     {type:'application/json;charset=utf-8'}
