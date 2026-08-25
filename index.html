@@ -6227,5 +6227,25 @@ if(incomeListEditToggle){
   });
 }
 </script>
+
+<script id="app-version-refresh">
+(function(){
+  const APP_VERSION = '2026-08-25-1';
+  const VERSION_KEY = 'bearMoneyBookAppVersion';
+  const current = localStorage.getItem(VERSION_KEY);
+  if(current !== APP_VERSION){
+    localStorage.setItem(VERSION_KEY, APP_VERSION);
+    if('caches' in window){
+      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
+    }
+    const url = new URL(window.location.href);
+    if(url.searchParams.get('v') !== APP_VERSION){
+      url.searchParams.set('v', APP_VERSION);
+      window.location.replace(url.toString());
+      return;
+    }
+  }
+})();
+</script>
 </body>
 </html>
