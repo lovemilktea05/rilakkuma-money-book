@@ -6228,23 +6228,52 @@ if(incomeListEditToggle){
 }
 </script>
 
-<script id="app-version-refresh">
+<script id="app-version-refresh" data-app-version="2026-08-25-2">
 (function(){
-  const APP_VERSION = '2026-08-25-1';
+  const APP_VERSION = '2026-08-25-2';
   const VERSION_KEY = 'bearMoneyBookAppVersion';
-  const current = localStorage.getItem(VERSION_KEY);
-  if(current !== APP_VERSION){
-    localStorage.setItem(VERSION_KEY, APP_VERSION);
-    if('caches' in window){
-      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
-    }
-    const url = new URL(window.location.href);
-    if(url.searchParams.get('v') !== APP_VERSION){
-      url.searchParams.set('v', APP_VERSION);
-      window.location.replace(url.toString());
-      return;
+  localStorage.setItem(VERSION_KEY, APP_VERSION);
+
+  async function checkForLatestVersion(){
+    if(!navigator.onLine) return;
+    try{
+      const checkUrl = new URL('index.html', window.location.href);
+      checkUrl.searchParams.set('_update', Date.now().toString());
+      const response = await fetch(checkUrl.toString(), {
+        method:'GET',
+        cache:'no-store',
+        credentials:'same-origin',
+        headers:{'Cache-Control':'no-cache'}
+      });
+      if(!response.ok) return;
+
+      const latestHtml = await response.text();
+      const match = latestHtml.match(/id=["']app-version-refresh["'][^>]*data-app-version=["']([^"']+)["']/i);
+      const latestVersion = match ? match[1] : '';
+      if(!latestVersion || latestVersion === APP_VERSION) return;
+
+      localStorage.setItem(VERSION_KEY, latestVersion);
+      if('caches' in window){
+        try{
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }catch(_e){}
+      }
+
+      // 直接在目前的主畫面 Web App 內套用最新版，不導向 Safari。
+      document.open();
+      document.write(latestHtml);
+      document.close();
+    }catch(_err){
+      // 離線或 GitHub Pages 暫時無法連線時，繼續使用目前版本。
     }
   }
+
+  // 開啟主畫面 App 後檢查一次；從背景回到前景時再檢查一次。
+  setTimeout(checkForLatestVersion, 700);
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible') checkForLatestVersion();
+  });
 })();
 </script>
 </body>
