@@ -4414,7 +4414,10 @@ function loadBookTitle(){ const saved=localStorage.getItem(TITLE_KEY); return (!
 function renderBookTitle(){ const el=document.getElementById('bookTitle'); if(el) el.textContent=loadBookTitle(); document.title=loadBookTitle(); }
 
 const today = new Date();
-let current = { year: today.getFullYear(), month: today.getMonth() + 1 };
+let current = {
+  year: Number(today.getFullYear()),
+  month: Number(today.getMonth()) + 1
+};
 
 function monthKey(year, month){
   return `${year}-${String(month).padStart(2,'0')}`;
@@ -6276,9 +6279,9 @@ if(incomeListEditToggle){
 }
 </script>
 
-<script id="app-version-refresh" data-app-version="2026-09-02-2">
+<script id="app-version-refresh" data-app-version="2026-09-02-3">
 (function(){
-  const APP_VERSION = '2026-09-02-2';
+  const APP_VERSION = '2026-09-02-3';
   const VERSION_KEY = 'bearMoneyBookAppVersion';
   localStorage.setItem(VERSION_KEY, APP_VERSION);
 
