@@ -4413,7 +4413,8 @@ const LAST_VIEW_KEY = 'bear-money-book-last-view-v1';
 function loadBookTitle(){ const saved=localStorage.getItem(TITLE_KEY); return (!saved || saved==='花錢如流水') ? '拉拉熊記帳本' : saved; }
 function renderBookTitle(){ const el=document.getElementById('bookTitle'); if(el) el.textContent=loadBookTitle(); document.title=loadBookTitle(); }
 
-let current = { year: 2026, month: 8 };
+const today = new Date();
+let current = { year: today.getFullYear(), month: today.getMonth() + 1 };
 
 function monthKey(year, month){
   return `${year}-${String(month).padStart(2,'0')}`;
@@ -6275,9 +6276,9 @@ if(incomeListEditToggle){
 }
 </script>
 
-<script id="app-version-refresh" data-app-version="2026-09-02-1">
+<script id="app-version-refresh" data-app-version="2026-09-02-2">
 (function(){
-  const APP_VERSION = '2026-09-02-1';
+  const APP_VERSION = '2026-09-02-2';
   const VERSION_KEY = 'bearMoneyBookAppVersion';
   localStorage.setItem(VERSION_KEY, APP_VERSION);
 
