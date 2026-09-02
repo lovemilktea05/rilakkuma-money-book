@@ -3635,6 +3635,31 @@ body.income-savings-mode .finance-month-summary-card{
   .finance-income-tools-only .finance-income-tool-btn.concept-action-btn{gap:6px !important;padding-left:8px !important;padding-right:8px !important;}
 }
 </style>
+
+<style id="ios-input-zoom-fix">
+/* iPhone/iPad：避免點輸入框時 Safari 自動放大且無法縮回 */
+@supports (-webkit-touch-callout: none){
+  @media (max-width: 900px){
+    input,
+    select,
+    textarea,
+    .price-input,
+    .edit-input,
+    .edit-note,
+    .finance-inline-edit,
+    .finance-dialog-form input,
+    .finance-form input,
+    .field input,
+    .picker-grid input,
+    .picker-grid select,
+    .inline-date-select,
+    .quick-month-select{
+      font-size:16px !important;
+    }
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app-shell">
@@ -6250,9 +6275,9 @@ if(incomeListEditToggle){
 }
 </script>
 
-<script id="app-version-refresh" data-app-version="2026-08-25-2">
+<script id="app-version-refresh" data-app-version="2026-09-02-1">
 (function(){
-  const APP_VERSION = '2026-08-25-2';
+  const APP_VERSION = '2026-09-02-1';
   const VERSION_KEY = 'bearMoneyBookAppVersion';
   localStorage.setItem(VERSION_KEY, APP_VERSION);
 
